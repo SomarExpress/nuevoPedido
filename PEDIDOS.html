@@ -216,12 +216,89 @@
             padding: 15px;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
         }
 
         .pedido-card:hover {
             border-color: #667eea;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .pedido-card.alerta-tiempo {
+            background: #fee2e2;
+            border-color: #dc2626;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+            }
+            50% { 
+                box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+            }
+        }
+
+        .alerta-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .tiempo-transcurrido {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tiempo-transcurrido.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .tiempo-transcurrido.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alerta-sin-aceptar {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            color: #991b1b;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
         .pedido-header {
@@ -540,7 +617,7 @@
 
     <script>
         // IMPORTANTE: Reemplaza con tu URL de Apps Script
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_oOAfNXyIT6bMt-TFHoy_aYTKd1RCwYaH4lwZcCO2pH63ZYdJpA5EvNnEToLqDHEadg/exec';
+        const SCRIPT_URL = 'TU_URL_DE_APPS_SCRIPT_AQUI';
         
         let todosLosPedidos = [];
         let filtroActual = 'todos';
@@ -591,12 +668,13 @@
             todosLosPedidos.forEach(pedido => {
                 const estatus = (pedido.ESTATUS || '').toUpperCase().trim();
                 const fechaPedido = pedido.FECHA ? new Date(pedido.FECHA).toDateString() : '';
+                const tieneDelivery = pedido.DELIVERY && pedido.DELIVERY.trim() !== '';
 
                 if (estatus === 'FINALIZADO' && fechaPedido === hoy) {
                     finalizados.push(pedido);
-                } else if (estatus === 'PENDIENTE' || estatus === 'SIN ASIGNAR' || !estatus) {
+                } else if (!tieneDelivery) {
                     sinAsignar.push(pedido);
-                } else if (['ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
+                } else if (['PENDIENTE', 'ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
                     enCurso.push(pedido);
                 }
             });
@@ -628,12 +706,12 @@
         function crearTarjetaPedido(pedido) {
             const tipoPedido = (pedido['TIPO DE PEDIDO'] || 'COMPRA').toUpperCase();
             const vehiculo = (pedido.VEHICULO || 'MOTO').toUpperCase();
-            const total = parseFloat(pedido['VT ENVIO']) || 0;
+            const total = parseFloat(pedido['TOTAL + ENVIO']) || 0;
             const delivery = pedido.DELIVERY || 'Sin asignar';
             const comercio = pedido['NOMBRE DE COMERCIO'] || 'Sin comercio';
             const ciudad = pedido.CIUDAD || '';
             const sector = pedido.SECTOR || '';
-            const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
+            const noPedido = pedido['NO. PEDIDO'] || pedido.ID || 'S/N';
             const hora = pedido['HORA ASIGNADO'] || '';
 
             return `
@@ -675,7 +753,7 @@
         function abrirDetalles(pedido) {
             const modal = document.getElementById('modal');
             const modalBody = document.getElementById('modalBody');
-            const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
+            const noPedido = pedido['NO. PEDIDO'] || pedido.ID || 'S/N';
 
             document.getElementById('modalTitle').textContent = `Pedido #${noPedido}`;
 
@@ -739,7 +817,7 @@
                     <div class="detail-grid">
                         <div class="detail-item">
                             <div class="detail-label">Total Productos</div>
-                            <div class="detail-value">L ${parseFloat(pedido['TOTAL'] || 0).toFixed(2)}</div>
+                            <div class="detail-value">L ${parseFloat(pedido['TOTAL PRODUCTOS'] || 0).toFixed(2)}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Envío</div>
@@ -751,7 +829,7 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Total + Envío</div>
-                            <div class="detail-value" style="color: #667eea; font-size: 16px;">L ${parseFloat(pedido['VT ENVIO'] || 0).toFixed(2)}</div>
+                            <div class="detail-value" style="color: #667eea; font-size: 16px;">L ${parseFloat(pedido['TOTAL + ENVIO'] || 0).toFixed(2)}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Tipo de Pago</div>
@@ -767,6 +845,16 @@
                 <div class="detail-section">
                     <div class="section-title">⏰ Tiempos</div>
                     <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Tiempo Total</div>
+                            <div class="detail-value" style="color: #667eea; font-size: 16px; font-weight: bold;">
+                                ${calcularTiempoTranscurrido(pedido).texto}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Fecha Ingreso</div>
+                            <div class="detail-value">${pedido.FECHA ? new Date(pedido.FECHA).toLocaleString('es-HN') : 'N/A'}</div>
+                        </div>
                         <div class="detail-item">
                             <div class="detail-label">Hora Asignado</div>
                             <div class="detail-value">${pedido['HORA ASIGNADO'] || 'N/A'}</div>
@@ -818,7 +906,7 @@
                     const fechaPedido = p.FECHA ? new Date(p.FECHA).toDateString() : '';
                     return fechaPedido === hoy && p.ESTATUS === 'FINALIZADO';
                 })
-                .reduce((sum, p) => sum + (parseFloat(p['VT ENVIO']) || 0), 0);
+                .reduce((sum, p) => sum + (parseFloat(p['TOTAL + ENVIO']) || 0), 0);
 
             document.getElementById('totalPedidos').textContent = total;
             document.getElementById('totalIngresos').textContent = `L ${ingresosHoy.toFixed(2)}`;
@@ -859,7 +947,7 @@
 
             const pedidosFiltrados = todosLosPedidos.filter(p => {
                 return (
-                    (p['NO ORDEN'] || '').toString().toLowerCase().includes(searchTerm) ||
+                    (p['NO. PEDIDO'] || '').toString().toLowerCase().includes(searchTerm) ||
                     (p['NOMBRE DE COMERCIO'] || '').toLowerCase().includes(searchTerm) ||
                     (p.DELIVERY || '').toLowerCase().includes(searchTerm) ||
                     (p.CIUDAD || '').toLowerCase().includes(searchTerm) ||
