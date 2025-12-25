@@ -705,7 +705,7 @@
             
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+            }, 6000);
         }
 
         function detectarCambios(pedidosNuevos) {
@@ -1226,7 +1226,7 @@ async function iniciarCicloActualizacion() {
         console.error("Error en el ciclo:", error);
     } finally {
         // Espera 5 segundos antes de volver a pedir datos
-        setTimeout(iniciarCicloActualizacion, 10000);
+        setTimeout(iniciarCicloActualizacion, 30000);
     }
 }
 
