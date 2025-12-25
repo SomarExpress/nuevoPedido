@@ -904,7 +904,94 @@
             const sector = pedido.SECTOR || '';
             const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
             const estatus = pedido.ESTATUS || 'Sin estatus';
-            const esFinalizad o = estatus.toUpperCase() === 'FINALIZADO';
+            const esFinalizado = estatus.toUpperCase() === 'FINALIZADO';
+            
+            // Formatear hora desde FECHA
+            let horaFormateada = 'Sin hora';
+            if (pedido.FECHA) {
+                try {
+                    const fecha = new Date(pedido.FECHA);
+                    let horas = fecha.getHours();
+                    const minutos = fecha.getMinutes();
+                    const ampm = horas >= 12 ? 'PM' : 'AM';
+                    horas = horas % 12;
+                    horas = horas ? horas : 12;
+                    const minutosStr = minutos < 10 ? '0' + minutos : minutos;
+                    horaFormateada = `${horas}:${minutosStr} ${ampm}`;
+                } catch (e) {
+                    horaFormateada = 'Sin hora';
+                }
+            }
+            
+            const tiempoInfo = calcularTiempoTranscurrido(pedido);
+            const alertaSinAceptar = verificarAlertaSinAceptar(pedido);
+            const alertaTiempo = tiempoInfo.clase === 'danger';
+
+            let cardClass = 'pedido-card';
+            if (alertaTiempo && !esFinalizado) {
+                cardClass += ' alerta-tiempo';
+            }
+
+            let estatusClase = 'pedido-estatus';
+            const estatusNorm = estatus.toUpperCase().trim().replace(/\s+/g, '-');
+            if (estatusNorm.includes('PENDIENTE')) estatusClase += ' estatus-pendiente';
+            else if (estatusNorm.includes('ASIGNADO')) estatusClase += ' estatus-asignado';
+            else if (estatusNorm.includes('ESTABLECIMIENTO')) estatusClase += ' estatus-establecimiento';
+            else if (estatusNorm.includes('CAMINO')) estatusClase += ' estatus-camino';
+            else if (estatusNorm.includes('ENTREGANDO')) estatusClase += ' estatus-entregando';
+            else if (estatusNorm.includes('FINALIZADO')) estatusClase += ' estatus-finalizado';
+
+            // Decidir qué mostrar según el estado
+            let badgeAlerta = '';
+            if (esFinalizado && alertaTiempo) {
+                badgeAlerta = '<span class="badge-tiempo-excedido">Tiempo Excedido</span>';
+            } else if (alertaTiempo && !esFinalizado) {
+                badgeAlerta = '<div class="alerta-badge">⚠️ Fuera de Tiempo</div>';
+            }
+
+            return `
+                <div class="${cardClass}" onclick='abrirDetalles(${JSON.stringify(pedido).replace(/'/g, "&#39;")})'>
+                    ${badgeAlerta}
+                    <div class="pedido-header">
+                        <div class="pedido-id">#${noPedido}</div>
+                        <span class="pedido-badge badge-${tipoPedido.toLowerCase()}">${tipoPedido}</span>
+                    </div>
+                    <div class="pedido-info">
+                        <div class="info-row">
+                            <span class="info-icon">📊</span>
+                            <span class="${estatusClase}">${estatus}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-icon">🏪</span>
+                            <span class="info-value" style="font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${comercio}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-icon">📍</span>
+                            <span style="font-size: 11px;">${ciudad}${sector ? ' - ' + sector : ''}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-icon">⏱️</span>
+                            <span class="tiempo-transcurrido ${tiempoInfo.clase}">${tiempoInfo.texto}</span>
+                        </div>
+                        ${delivery !== 'Sin asignar' ? `
+                        <div class="info-row">
+                            <span class="info-icon">👤</span>
+                            <span class="pedido-delivery">${delivery}</span>
+                        </div>
+                        ` : ''}
+                        ${alertaSinAceptar ? `
+                        <div class="alerta-sin-aceptar">
+                            🚨 Delivery sin aceptar (3+ min)
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="pedido-footer">
+                        <span class="pedido-time">${horaFormateada}</span>
+                        <span class="pedido-total">L ${total.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }
             
             // Formatear hora desde FECHA
             let horaFormateada = 'Sin hora';
@@ -1209,8 +1296,8 @@
         // Cargar pedidos al iniciar
         cargarPedidos();
 
-        // Actualizar automáticamente cada 1 segundos en segundo plano
-        setInterval(cargarPedidos, 1000);
+        // Actualizar automáticamente cada 3 segundos en segundo plano
+        setInterval(cargarPedidos, 3000);
     </script>
 </body>
 </html>
