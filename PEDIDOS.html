@@ -545,10 +545,15 @@
         let todosLosPedidos = [];
         let filtroActual = 'todos';
 
+        let cargaInicial = true;
+
         async function cargarPedidos() {
             try {
-                document.getElementById('loadingState').style.display = 'block';
-                document.getElementById('canvasContainer').style.display = 'none';
+                // Solo mostrar loading en la primera carga
+                if (cargaInicial) {
+                    document.getElementById('loadingState').style.display = 'block';
+                    document.getElementById('canvasContainer').style.display = 'none';
+                }
 
                 const response = await fetch(`${SCRIPT_URL}?action=getPedidos`);
                 const data = await response.json();
@@ -558,15 +563,22 @@
                     procesarYMostrarPedidos();
                     actualizarEstadisticas();
                 } else {
-                    alert('Error al cargar pedidos: ' + (data.error || 'Error desconocido'));
+                    if (cargaInicial) {
+                        alert('Error al cargar pedidos: ' + (data.error || 'Error desconocido'));
+                    }
                 }
 
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('canvasContainer').style.display = 'grid';
+                if (cargaInicial) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('canvasContainer').style.display = 'grid';
+                    cargaInicial = false;
+                }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error de conexión: ' + error.message);
-                document.getElementById('loadingState').style.display = 'none';
+                if (cargaInicial) {
+                    alert('Error de conexión: ' + error.message);
+                    document.getElementById('loadingState').style.display = 'none';
+                }
             }
         }
 
@@ -577,14 +589,14 @@
             const hoy = new Date().toDateString();
 
             todosLosPedidos.forEach(pedido => {
-                const estatus = (pedido.ESTATUS || '').toUpperCase();
+                const estatus = (pedido.ESTATUS || '').toUpperCase().trim();
                 const fechaPedido = pedido.FECHA ? new Date(pedido.FECHA).toDateString() : '';
 
                 if (estatus === 'FINALIZADO' && fechaPedido === hoy) {
                     finalizados.push(pedido);
-                } else if (estatus === 'SIN ASIGNAR' || !pedido.DELIVERY) {
+                } else if (estatus === 'PENDIENTE' || estatus === 'SIN ASIGNAR' || !estatus) {
                     sinAsignar.push(pedido);
-                } else if (['ASIGNADO', 'ACEPTADO', 'EN ESTABLECIMIENTO', 'EN CAMINO'].includes(estatus)) {
+                } else if (['ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
                     enCurso.push(pedido);
                 }
             });
@@ -616,7 +628,7 @@
         function crearTarjetaPedido(pedido) {
             const tipoPedido = (pedido['TIPO DE PEDIDO'] || 'COMPRA').toUpperCase();
             const vehiculo = (pedido.VEHICULO || 'MOTO').toUpperCase();
-            const total = parseFloat(pedido['TOTAL + ENVIO']) || 0;
+            const total = parseFloat(pedido['VT ENVIO']) || 0;
             const delivery = pedido.DELIVERY || 'Sin asignar';
             const comercio = pedido['NOMBRE DE COMERCIO'] || 'Sin comercio';
             const ciudad = pedido.CIUDAD || '';
@@ -864,8 +876,8 @@
         // Cargar pedidos al iniciar
         cargarPedidos();
 
-        // Actualizar automáticamente cada 30 segundos
-        setInterval(cargarPedidos, 30000);
+        // Actualizar automáticamente cada 3 segundos en segundo plano
+        setInterval(cargarPedidos, 3000);
     </script>
 </body>
 </html>
