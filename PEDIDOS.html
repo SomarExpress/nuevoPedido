@@ -819,7 +819,8 @@
 
                 if (estatus === 'FINALIZADO' && fechaPedido === hoy) {
                     finalizados.push(pedido);
-                } else if ((estatus === 'PROGRAMADO' || estatus === 'PENDIENTE') && !tieneDelivery) {
+                } else if (estatus === 'PENDIENTE' || ((estatus === 'PROGRAMADO') && !tieneDelivery)) {
+                    // MODIFICACIÓN: PENDIENTE siempre va a Sin Asignar
                     sinAsignar.push(pedido);
                 } else if (['ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
                     enCurso.push(pedido);
@@ -907,18 +908,24 @@
         }
 
         function verificarAlertaSinAceptar(pedido) {
-            if (!pedido['HORA ASIGNADO']) {
-                return false;
-            }
-
+            // MODIFICACIÓN: Solo verificar si el estatus es PENDIENTE
             const estatus = (pedido.ESTATUS || '').toUpperCase().trim();
-            if (estatus !== 'ASIGNADO') {
+            if (estatus !== 'PENDIENTE') {
                 return false;
             }
 
-            const horaAsignado = new Date(pedido['HORA ASIGNADO']);
+            // Si no hay HORA ASIGNADO, usar la FECHA del pedido
+            let horaInicio;
+            if (pedido['HORA ASIGNADO']) {
+                horaInicio = new Date(pedido['HORA ASIGNADO']);
+            } else if (pedido.FECHA) {
+                horaInicio = new Date(pedido.FECHA);
+            } else {
+                return false;
+            }
+
             const ahora = new Date();
-            const diferenciaMinutos = Math.floor((ahora - horaAsignado) / 60000);
+            const diferenciaMinutos = Math.floor((ahora - horaInicio) / 60000);
 
             return diferenciaMinutos >= 3;
         }
