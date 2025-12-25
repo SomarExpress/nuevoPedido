@@ -213,7 +213,7 @@
             background: #f9fafb;
             border: 2px solid #e5e7eb;
             border-radius: 10px;
-            padding: 15px;
+            padding: 12px;
             cursor: pointer;
             transition: all 0.3s;
             position: relative;
@@ -228,16 +228,6 @@
         .pedido-card.alerta-tiempo {
             background: #fee2e2;
             border-color: #dc2626;
-            animation: pulse-red 2s infinite;
-        }
-
-        @keyframes pulse-red {
-            0%, 100% { 
-                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
-            }
-            50% { 
-                box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
-            }
         }
 
         .alerta-badge {
@@ -250,32 +240,34 @@
             border-radius: 12px;
             font-size: 10px;
             font-weight: bold;
-            animation: shake 0.5s infinite;
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+        .badge-tiempo-excedido {
+            background: #dc2626;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: bold;
         }
 
         .pedido-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 12px;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
         .pedido-id {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
             color: #1f2937;
         }
 
         .pedido-badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -306,20 +298,20 @@
         .pedido-info {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .info-row {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 13px;
+            gap: 6px;
+            font-size: 12px;
             color: #4b5563;
         }
 
         .info-icon {
             color: #9ca3af;
-            min-width: 16px;
+            min-width: 14px;
         }
 
         .info-value {
@@ -331,20 +323,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 12px;
-            padding-top: 12px;
+            margin-top: 10px;
+            padding-top: 10px;
             border-top: 1px solid #e5e7eb;
         }
 
         .pedido-time {
-            font-size: 12px;
+            font-size: 11px;
             color: #6b7280;
         }
 
         .pedido-total {
             font-weight: bold;
             color: #667eea;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .pedido-delivery {
@@ -666,7 +658,7 @@
 
     <script>
         // IMPORTANTE: Reemplaza con tu URL de Apps Script
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQcJdpvmKoOnqQKEWl8vWHsnCNJhfc3bQO2MjRIGutOtTjouRnIZNLqKb9ODrdYdWsiQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZLUA_0rFB-ma3s_K18Jq1M5FR4MYKF0b_e1fbfceeYZ2bwsxMZWD3sjYe0NEsxb9f8A/exec';
         
         let todosLosPedidos = [];
         let filtroActual = 'todos';
@@ -695,7 +687,7 @@
                 }
                 
                 oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(1.0, audioContext.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
                 
                 oscillator.start(audioContext.currentTime);
@@ -803,6 +795,11 @@
                 const fechaPedido = pedido.FECHA ? new Date(pedido.FECHA).toDateString() : '';
                 const tieneDelivery = pedido.DELIVERY && pedido.DELIVERY.trim() !== '';
 
+                // Filtrar cancelados
+                if (estatus === 'CANCELADO' || estatus === 'CANCELLED') {
+                    return; // No agregar a ninguna columna
+                }
+
                 if (estatus === 'FINALIZADO' && fechaPedido === hoy) {
                     finalizados.push(pedido);
                 } else if (!tieneDelivery) {
@@ -906,15 +903,32 @@
             const ciudad = pedido.CIUDAD || '';
             const sector = pedido.SECTOR || '';
             const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
-            const hora = pedido['HORA ASIGNADO'] || '';
             const estatus = pedido.ESTATUS || 'Sin estatus';
+            const esFinalizad o = estatus.toUpperCase() === 'FINALIZADO';
+            
+            // Formatear hora desde FECHA
+            let horaFormateada = 'Sin hora';
+            if (pedido.FECHA) {
+                try {
+                    const fecha = new Date(pedido.FECHA);
+                    let horas = fecha.getHours();
+                    const minutos = fecha.getMinutes();
+                    const ampm = horas >= 12 ? 'PM' : 'AM';
+                    horas = horas % 12;
+                    horas = horas ? horas : 12;
+                    const minutosStr = minutos < 10 ? '0' + minutos : minutos;
+                    horaFormateada = `${horas}:${minutosStr} ${ampm}`;
+                } catch (e) {
+                    horaFormateada = 'Sin hora';
+                }
+            }
             
             const tiempoInfo = calcularTiempoTranscurrido(pedido);
             const alertaSinAceptar = verificarAlertaSinAceptar(pedido);
             const alertaTiempo = tiempoInfo.clase === 'danger';
 
             let cardClass = 'pedido-card';
-            if (alertaTiempo) {
+            if (alertaTiempo && !esFinalizado) {
                 cardClass += ' alerta-tiempo';
             }
 
@@ -927,14 +941,20 @@
             else if (estatusNorm.includes('ENTREGANDO')) estatusClase += ' estatus-entregando';
             else if (estatusNorm.includes('FINALIZADO')) estatusClase += ' estatus-finalizado';
 
+            // Decidir qué mostrar según el estado
+            let badgeAlerta = '';
+            if (esFinalizado && alertaTiempo) {
+                badgeAlerta = '<span class="badge-tiempo-excedido">Tiempo Excedido</span>';
+            } else if (alertaTiempo && !esFinalizado) {
+                badgeAlerta = '<div class="alerta-badge">⚠️ Fuera de Tiempo</div>';
+            }
+
             return `
                 <div class="${cardClass}" onclick='abrirDetalles(${JSON.stringify(pedido).replace(/'/g, "&#39;")})'>
-                    ${alertaTiempo ? '<div class="alerta-badge">⚠️ URGENTE</div>' : ''}
+                    ${badgeAlerta}
                     <div class="pedido-header">
                         <div class="pedido-id">#${noPedido}</div>
-                        <div>
-                            <span class="pedido-badge badge-${tipoPedido.toLowerCase()}">${tipoPedido}</span>
-                        </div>
+                        <span class="pedido-badge badge-${tipoPedido.toLowerCase()}">${tipoPedido}</span>
                     </div>
                     <div class="pedido-info">
                         <div class="info-row">
@@ -943,15 +963,11 @@
                         </div>
                         <div class="info-row">
                             <span class="info-icon">🏪</span>
-                            <span class="info-value">${comercio}</span>
+                            <span class="info-value" style="font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${comercio}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-icon">📍</span>
-                            <span>${ciudad} - ${sector}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-icon">🏍️</span>
-                            <span class="pedido-badge badge-${vehiculo.toLowerCase()}">${vehiculo}</span>
+                            <span style="font-size: 11px;">${ciudad}${sector ? ' - ' + sector : ''}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-icon">⏱️</span>
@@ -965,12 +981,12 @@
                         ` : ''}
                         ${alertaSinAceptar ? `
                         <div class="alerta-sin-aceptar">
-                            🚨 Delivery sin aceptar por más de 3 minutos
+                            🚨 Delivery sin aceptar (3+ min)
                         </div>
                         ` : ''}
                     </div>
                     <div class="pedido-footer">
-                        <span class="pedido-time">${hora || 'Sin hora'}</span>
+                        <span class="pedido-time">${horaFormateada}</span>
                         <span class="pedido-total">L ${total.toFixed(2)}</span>
                     </div>
                 </div>
@@ -1193,8 +1209,8 @@
         // Cargar pedidos al iniciar
         cargarPedidos();
 
-        // Actualizar automáticamente cada 3 segundos en segundo plano
-        setInterval(cargarPedidos, 3000);
+        // Actualizar automáticamente cada 1 segundos en segundo plano
+        setInterval(cargarPedidos, 1000);
     </script>
 </body>
 </html>
