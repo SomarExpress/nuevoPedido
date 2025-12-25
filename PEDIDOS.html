@@ -910,7 +910,7 @@
             const total = parseFloat(pedido['VT ENVIO']) || 0;
             const delivery = pedido.DELIVERY || 'Sin asignar';
             const comercio = pedido['NOMBRE DE COMERCIO'] || 'Sin comercio';
-            const cliente = pedido.CLIENTE || pedido['NOMBRE CLIENTE'] || '';
+            const cliente = pedido.NOMBRE_CLIENTE || pedido.CLIENTE || '';
             const ciudad = pedido.CIUDAD || '';
             const sector = pedido.SECTOR || '';
             const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
@@ -1219,7 +1219,7 @@
         });
 
         cargarPedidos();
-        setInterval(cargarPedidos, 3000);
+        setInterval(cargarPedidos, 1000);
     </script>
 </body>
 </html>
