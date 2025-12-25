@@ -20,41 +20,41 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 12px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 24px;
+            margin-bottom: 8px;
         }
 
         .stats {
             display: flex;
-            gap: 20px;
-            margin-top: 20px;
+            gap: 15px;
+            margin-top: 15px;
             flex-wrap: wrap;
         }
 
         .stat-card {
             background: rgba(255,255,255,0.2);
-            padding: 15px 20px;
+            padding: 12px 16px;
             border-radius: 8px;
             backdrop-filter: blur(10px);
         }
 
         .stat-number {
-            font-size: 32px;
+            font-size: 26px;
             font-weight: bold;
             line-height: 1;
         }
 
         .stat-label {
-            font-size: 14px;
+            font-size: 13px;
             opacity: 0.9;
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         .controls {
@@ -236,10 +236,11 @@
             right: -8px;
             background: #dc2626;
             color: white;
-            padding: 4px 8px;
+            padding: 5px 10px;
             border-radius: 12px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.5);
         }
 
         .badge-tiempo-excedido {
@@ -799,11 +800,18 @@
 
                 if (estatus === 'FINALIZADO' && fechaPedido === hoy) {
                     finalizados.push(pedido);
-                } else if (!tieneDelivery) {
+                } else if ((estatus === 'PROGRAMADO' || estatus === 'PENDIENTE') && !tieneDelivery) {
                     sinAsignar.push(pedido);
-                } else if (['PENDIENTE', 'ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
+                } else if (['ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
                     enCurso.push(pedido);
                 }
+            });
+
+            // Ordenar finalizados de más reciente a más antiguo
+            finalizados.sort((a, b) => {
+                const fechaA = a['HORA FINALIZADO'] ? new Date(a['HORA FINALIZADO']) : new Date(a.FECHA);
+                const fechaB = b['HORA FINALIZADO'] ? new Date(b['HORA FINALIZADO']) : new Date(b.FECHA);
+                return fechaB - fechaA;
             });
 
             mostrarPedidosEnColumna('listaSinAsignar', sinAsignar, 'countSinAsignar');
@@ -880,7 +888,12 @@
         }
 
         function verificarAlertaSinAceptar(pedido) {
-            if (!pedido['HORA ASIGNADO'] || pedido.ESTATUS !== 'PENDIENTE') {
+            if (!pedido['HORA ASIGNADO']) {
+                return false;
+            }
+
+            const estatus = (pedido.ESTATUS || '').toUpperCase().trim();
+            if (estatus !== 'ASIGNADO') {
                 return false;
             }
 
@@ -897,6 +910,7 @@
             const total = parseFloat(pedido['VT ENVIO']) || 0;
             const delivery = pedido.DELIVERY || 'Sin asignar';
             const comercio = pedido['NOMBRE DE COMERCIO'] || 'Sin comercio';
+            const cliente = pedido.CLIENTE || pedido['NOMBRE CLIENTE'] || '';
             const ciudad = pedido.CIUDAD || '';
             const sector = pedido.SECTOR || '';
             const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
@@ -930,7 +944,7 @@
 
             let estatusClase = 'pedido-estatus';
             const estatusNorm = estatus.toUpperCase().trim().replace(/\s+/g, '-');
-            if (estatusNorm.includes('PENDIENTE')) estatusClase += ' estatus-pendiente';
+            if (estatusNorm.includes('PENDIENTE') || estatusNorm.includes('PROGRAMADO')) estatusClase += ' estatus-pendiente';
             else if (estatusNorm.includes('ASIGNADO')) estatusClase += ' estatus-asignado';
             else if (estatusNorm.includes('ESTABLECIMIENTO')) estatusClase += ' estatus-establecimiento';
             else if (estatusNorm.includes('CAMINO')) estatusClase += ' estatus-camino';
@@ -956,6 +970,12 @@
                             <span class="info-icon">📊</span>
                             <span class="${estatusClase}">${estatus}</span>
                         </div>
+                        ${cliente ? `
+                        <div class="info-row">
+                            <span class="info-icon">👤</span>
+                            <span class="info-value" style="font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${cliente}</span>
+                        </div>
+                        ` : ''}
                         <div class="info-row">
                             <span class="info-icon">🏪</span>
                             <span class="info-value" style="font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${comercio}</span>
@@ -970,7 +990,7 @@
                         </div>
                         ${delivery !== 'Sin asignar' ? `
                         <div class="info-row">
-                            <span class="info-icon">👤</span>
+                            <span class="info-icon">🚚</span>
                             <span class="pedido-delivery">${delivery}</span>
                         </div>
                         ` : ''}
@@ -1199,7 +1219,7 @@
         });
 
         cargarPedidos();
-        setInterval(cargarPedidos, 3000);
+        setInterval(cargarPedidos, 1000);
     </script>
 </body>
 </html>
