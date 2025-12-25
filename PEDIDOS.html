@@ -371,14 +371,23 @@
             font-size: 16px;
         }
 
-        .pedido-delivery {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 4px 8px;
-            border-radius: 6px;
+        .pedido-estatus {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
         }
+
+        .estatus-pendiente { background: #fef3c7; color: #92400e; }
+        .estatus-asignado { background: #dbeafe; color: #1e40af; }
+        .estatus-establecimiento { background: #e0e7ff; color: #3730a3; }
+        .estatus-camino { background: #dcfce7; color: #166534; }
+        .estatus-entregando { background: #fef3c7; color: #92400e; }
+        .estatus-finalizado { background: #d1fae5; color: #065f46; }
 
         .empty-state {
             text-align: center;
@@ -632,10 +641,30 @@
                     document.getElementById('canvasContainer').style.display = 'none';
                 }
 
-                const response = await fetch(`${SCRIPT_URL}?action=getPedidos`);
+                const response = await fetch(`${SCRIPT_URL}?action=getPedidos&timestamp=${Date.now()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('La respuesta no es JSON válido. Verifica que el Apps Script esté desplegado correctamente como aplicación web.');
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
+                    // Detectar cambios antes de actualizar
+                    if (!cargaInicial) {
+                        detectarCambios(data.pedidos);
+                    }
+                    
                     todosLosPedidos = data.pedidos;
                     procesarYMostrarPedidos();
                     actualizarEstadisticas();
@@ -651,9 +680,9 @@
                     cargaInicial = false;
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error completo:', error);
                 if (cargaInicial) {
-                    alert('Error de conexión: ' + error.message);
+                    alert('Error de conexión: ' + error.message + '\n\nAsegúrate de que:\n1. El Apps Script esté desplegado como aplicación web\n2. El acceso sea "Cualquier persona"\n3. La URL sea correcta');
                     document.getElementById('loadingState').style.display = 'none';
                 }
             }
