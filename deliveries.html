@@ -260,6 +260,1121 @@
             color: #6b7280;
         }
 
+        .loading-address {
+            color: #9ca3af;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .distance-info {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .distance-value {
+            font-weight: bold;
+        }
+
+        /* Vista de Mapa */
+        .map-view {
+            width: 100%;
+            display: none;
+            position: relative;
+            flex-direction: column;
+        }
+
+        .map-view.active {
+            display: flex;
+        }
+
+        #map {
+            flex: 1;
+            height: 100%;
+            width: 100%;
+        }
+
+        .map-sidebar {
+            width: 350px;
+            background: white;
+            overflow-y: auto;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #10b981;
+            color: white;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .sidebar-list {
+            padding: 10px;
+        }
+
+        .sidebar-delivery {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-delivery:hover {
+            background: #f9fafb;
+        }
+
+        .sidebar-delivery.selected {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+        }
+
+        .sidebar-delivery-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-delivery-location {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .sidebar-delivery-distance {
+            font-size: 11px;
+            color: #10b981;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Popup personalizado de Leaflet */
+        .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            padding: 0;
+        }
+
+        .popup-content {
+            padding: 15px;
+        }
+
+        .popup-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .popup-info {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+
+        .notification-dot {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+            display: none;
+        }
+
+        .notification-dot.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Marker personalizado */
+        .delivery-marker {
+            background: #10b981;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .delivery-marker:hover {
+            transform: scale(1.1);
+        }
+
+        .delivery-marker.selected {
+            background: #dc2626;
+            transform: scale(1.2);
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                height: calc(100vh - 220px);
+            }
+
+            .map-view {
+                flex-direction: column;
+            }
+
+            .map-sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top: auto;
+                width: 100%;
+                height: 40vh;
+                max-height: 40vh;
+                transform: translateY(100%);
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .map-sidebar.mobile-open {
+                transform: translateY(0);
+            }
+
+            .sidebar-toggle {
+                display: block;
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+                background: #10b981;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                cursor: pointer;
+                z-index: 1001;
+            }
+
+            #map {
+                height: calc(100vh - 220px);
+            }
+
+            .deliveries-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                flex-direction: column;
+            }
+
+            .controls {
+                gap: 10px;
+            }
+
+            .view-toggle {
+                width: 100%;
+            }
+
+            .view-btn {
+                flex: 1;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .sidebar-toggle {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚚 Deliveries Activos</h1>
+        <p>Monitoreo en tiempo real</p>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDeliveries">0</div>
+                <div class="stat-label">Deliveries Activos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalCiudades">0</div>
+                <div class="stat-label">Ciudades</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <a href="index.html" class="btn-back">← Volver a Pedidos</a>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Buscar por nombre, ciudad, sector...">
+            <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="view-toggle">
+            <button class="view-btn active" onclick="cambiarVista('lista')">📋 Lista</button>
+            <button class="view-btn" onclick="cambiarVista('mapa')">🗺️ Mapa</button>
+        </div>
+
+        <button class="btn-refresh" onclick="cargarDeliveries()">🔄 Actualizar</button>
+    </div>
+
+    <div id="loadingState" class="loading">
+        <div class="spinner"></div>
+        <p>Cargando deliveries...</p>
+    </div>
+
+    <div class="main-container" style="display: none;" id="mainContainer">
+        <!-- Vista de Lista -->
+        <div class="list-view active" id="listView">
+            <div class="deliveries-grid" id="deliveriesGrid"></div>
+        </div>
+
+        <!-- Vista de Mapa -->
+        <div class="map-view" id="mapView">
+            <div id="map"></div>
+            <div class="map-sidebar" id="mapSidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-title">Deliveries en el Mapa</div>
+                </div>
+                <div class="sidebar-list" id="sidebarList"></div>
+            </div>
+            <button class="sidebar-toggle" onclick="toggleSidebar()">📍</button>
+        </div>
+    </div>
+
+    <div id="notification" class="notification-dot"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQcJdpvmKoOnqQKEWl8vWHsnCNJhfc3bQO2MjRIGutOtTjouRnIZNLqKb9ODrdYdWsiQ/exec';
+        const BASE_LOCATION = { lat: 15.605012349526897, lng: -87.95573203043553 }; // Ubicación base
+        
+        let todosLosDeliveries = [];
+        let map = null;
+        let markers = {};
+        let vistaActual = 'lista';
+        let deliveriesAnteriores = [];
+        let deliverySeleccionado = null;
+        let originalBounds = null;
+        let addressCache = {}; // Cache para direcciones
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playNotificationSound() {
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+                
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(1.0, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (error) {
+                console.log('Audio no disponible');
+            }
+        }
+
+        function mostrarNotificacion(mensaje) {
+            const notification = document.getElementById('notification');
+            notification.textContent = mensaje;
+            notification.classList.add('show');
+            
+            playNotificationSound();
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        function detectarCambios(deliveriesNuevos) {
+            if (deliveriesAnteriores.length === 0) {
+                deliveriesAnteriores = [...deliveriesNuevos];
+                return;
+            }
+
+            const idsAnteriores = new Set(deliveriesAnteriores.map(d => d.ID_DELIVERY));
+            const nuevosDeliveries = deliveriesNuevos.filter(d => !idsAnteriores.has(d.ID_DELIVERY));
+
+            if (nuevosDeliveries.length > 0) {
+                const mensaje = nuevosDeliveries.length === 1 
+                    ? `🆕 Nuevo delivery activo: ${nuevosDeliveries[0].NOMBRE}`
+                    : `🆕 ${nuevosDeliveries.length} deliveries nuevos activos`;
+                mostrarNotificacion(mensaje);
+            }
+
+            const idsNuevos = new Set(deliveriesNuevos.map(d => d.ID_DELIVERY));
+            const deliveriesInactivos = deliveriesAnteriores.filter(d => !idsNuevos.has(d.ID_DELIVERY));
+
+            if (deliveriesInactivos.length > 0) {
+                const mensaje = deliveriesInactivos.length === 1 
+                    ? `📴 ${deliveriesInactivos[0].NOMBRE} se ha desactivado`
+                    : `📴 ${deliveriesInactivos.length} deliveries inactivos`;
+                mostrarNotificacion(mensaje);
+            }
+
+            deliveriesAnteriores = [...deliveriesNuevos];
+        }
+
+        // Calcular distancia usando fórmula de Haversine
+        function calcularDistancia(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radio de la Tierra en km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distancia = R * c;
+            
+            // Estimar tiempo (30 km/h promedio en ciudad)
+            const tiempoMinutos = Math.round((distancia / 30) * 60);
+            
+            return {
+                km: distancia.toFixed(2),
+                minutos: tiempoMinutos
+            };
+        }
+
+        // Geocodificación inversa usando Nominatim (OpenStreetMap)
+        async function obtenerDireccion(lat, lng) {
+            const cacheKey = `${lat},${lng}`;
+            
+            // Verificar cache
+            if (addressCache[cacheKey]) {
+                return addressCache[cacheKey];
+            }
+
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+                    {
+                        headers: {
+                            'Accept-Language': 'es'
+                        }
+                    }
+                );
+                
+                const data = await response.json();
+                
+                let direccion = 'Dirección no disponible';
+                let ciudad = 'Ciudad no disponible';
+                
+                if (data.address) {
+                    // Construir dirección
+                    const partes = [];
+                    if (data.address.road) partes.push(data.address.road);
+                    if (data.address.neighbourhood) partes.push(data.address.neighbourhood);
+                    if (data.address.suburb) partes.push(data.address.suburb);
+                    
+                    direccion = partes.length > 0 ? partes.join(', ') : data.display_name;
+                    
+                    // Obtener ciudad
+                    ciudad = data.address.city || 
+                             data.address.town || 
+                             data.address.village || 
+                             data.address.municipality || 
+                             'Ciudad no disponible';
+                }
+                
+                const resultado = { direccion, ciudad };
+                addressCache[cacheKey] = resultado;
+                
+                return resultado;
+            } catch (error) {
+                console.error('Error al obtener dirección:', error);
+                return { 
+                    direccion: 'Error al obtener dirección', 
+                    ciudad: 'Ciudad no disponible' 
+                };
+            }
+        }
+
+        async function cargarDeliveries() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getDeliveries&timestamp=${Date.now()}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    detectarCambios(data.deliveries);
+                    todosLosDeliveries = data.deliveries;
+                    
+                    // Cargar direcciones para todos los deliveries
+                    await cargarDireccionesParaDeliveries();
+                    
+                    actualizarVista();
+                    actualizarEstadisticas();
+                } else {
+                    console.error('Error al cargar deliveries:', data.error);
+                    mostrarNotificacion('❌ Error al cargar deliveries');
+                }
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'flex';
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('❌ Error de conexión');
+                document.getElementById('loadingState').style.display = 'none';
+            }
+        }
+
+        async function cargarDireccionesParaDeliveries() {
+            const promesas = todosLosDeliveries.map(async (delivery) => {
+                const coords = parsearCoordenadas(delivery['UBICACION DELIVERY ACTIVO']);
+                if (coords) {
+                    const direccionData = await obtenerDireccion(coords.lat, coords.lng);
+                    delivery._direccionActual = direccionData.direccion;
+                    delivery._ciudadActual = direccionData.ciudad;
+                    
+                    // Calcular distancia a la base
+                    const distancia = calcularDistancia(
+                        coords.lat, coords.lng,
+                        BASE_LOCATION.lat, BASE_LOCATION.lng
+                    );
+                    delivery._distanciaBase = distancia;
+                }
+            });
+            
+            await Promise.all(promesas);
+        }
+
+        function actualizarEstadisticas() {
+            document.getElementById('totalDeliveries').textContent = todosLosDeliveries.length;
+            
+            const ciudades = new Set(todosLosDeliveries.map(d => d._ciudadActual || d.CIUDAD).filter(c => c));
+            document.getElementById('totalCiudades').textContent = ciudades.size;
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mapSidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        function cambiarVista(vista) {
+            vistaActual = vista;
+            
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (vista === 'lista') {
+                document.getElementById('listView').classList.add('active');
+                document.getElementById('mapView').classList.remove('active');
+            } else {
+                document.getElementById('listView').classList.remove('active');
+                document.getElementById('mapView').classList.add('active');
+                inicializarMapa();
+            }
+        }
+
+        function actualizarVista() {
+            if (vistaActual === 'lista') {
+                mostrarVistaLista();
+            } else {
+                actualizarMapa();
+            }
+        }
+
+        function mostrarVistaLista() {
+            const grid = document.getElementById('deliveriesGrid');
+            
+            if (todosLosDeliveries.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🚫</div>
+                        <p>No hay deliveries activos</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = todosLosDeliveries.map(delivery => {
+                const direccion = delivery._direccionActual || 'Cargando dirección...';
+                const ciudad = delivery._ciudadActual || delivery.CIUDAD || 'Ciudad no disponible';
+                const distancia = delivery._distanciaBase;
+
+                return `
+                <div class="delivery-card">
+                    <div class="delivery-header">
+                        <div class="delivery-name">${delivery.NOMBRE || 'Sin nombre'}</div>
+                        <div class="delivery-status">✓ Activo</div>
+                    </div>
+                    <div class="delivery-info">
+                        <div class="info-row">
+                            <span class="info-icon">📧</span>
+                            <span>${delivery.CORREO || 'Sin correo'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-icon">🏙️</span>
+                            <span>${ciudad}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-icon">📍</span>
+                            <span class="${direccion.includes('Cargando') ? 'loading-address' : ''}">${direccion}</span>
+                        </div>
+                        ${distancia ? `
+                        <div class="distance-info">
+                            <span>🏠 Distancia a base:</span>
+                            <span class="distance-value">${distancia.km} km • ${distancia.minutos} min</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="delivery-id">ID: ${delivery.ID_DELIVERY || 'N/A'}</div>
+                </div>
+            `}).join('');
+        }
+
+        function inicializarMapa() {
+            if (map) return;
+
+            // Inicializar mapa con vista general de Honduras
+            // El centro y zoom se ajustarán automáticamente según los deliveries activos
+            map = L.map('map').setView([14.5, -87.5], 9);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19,
+                minZoom: 7
+            }).addTo(map);
+
+            actualizarMapa();
+        }
+
+        function parsearCoordenadas(ubicacionStr) {
+            if (!ubicacionStr) return null;
+
+            try {
+                // Formato esperado: "14.0723,-87.1921" o similar
+                const coordenadas = ubicacionStr.split(',').map(c => parseFloat(c.trim()));
+                
+                if (coordenadas.length === 2 && !isNaN(coordenadas[0]) && !isNaN(coordenadas[1])) {
+                    return { lat: coordenadas[0], lng: coordenadas[1] };
+                }
+
+                // Intentar parsear como JSON si está en ese formato
+                const parsed = JSON.parse(ubicacionStr);
+                if (parsed.lat && parsed.lng) {
+                    return { lat: parseFloat(parsed.lat), lng: parseFloat(parsed.lng) };
+                }
+            } catch (e) {
+                console.warn('No se pudo parsear ubicación:', ubicacionStr);
+            }
+
+            return null;
+        }
+
+        function seleccionarDelivery(deliveryId, coords) {
+            // Deseleccionar el anterior
+            if (deliverySeleccionado) {
+                const anteriorMarker = markers[deliverySeleccionado];
+                if (anteriorMarker) {
+                    const icon = anteriorMarker.getElement();
+                    if (icon) {
+                        icon.querySelector('.delivery-marker').classList.remove('selected');
+                    }
+                }
+            }
+
+            // Seleccionar el nuevo
+            if (deliverySeleccionado === deliveryId) {
+                // Si ya estaba seleccionado, deseleccionar y volver al zoom original
+                deliverySeleccionado = null;
+                if (originalBounds && originalBounds.length > 0) {
+                    map.fitBounds(originalBounds, { 
+                        padding: [100, 100],
+                        maxZoom: 13
+                    });
+                }
+            } else {
+                deliverySeleccionado = deliveryId;
+                const marker = markers[deliveryId];
+                if (marker) {
+                    const icon = marker.getElement();
+                    if (icon) {
+                        icon.querySelector('.delivery-marker').classList.add('selected');
+                    }
+                    marker.openPopup();
+                    map.setView([coords.lat, coords.lng], 15, { animate: true });
+                }
+            }
+
+            // Actualizar sidebar
+            document.querySelectorAll('.sidebar-delivery').forEach(item => {
+                item.classList.remove('selected');
+            });
+            if (deliverySeleccionado) {
+                const sidebarItem = document.querySelector(`[data-delivery-id="${deliveryId}"]`);
+                if (sidebarItem) {
+                    sidebarItem.classList.add('selected');
+                }
+            }
+        }
+
+        function actualizarMapa() {
+            if (!map) return;
+
+            // Limpiar markers anteriores
+            Object.values(markers).forEach(marker => map.removeLayer(marker));
+            markers = {};
+
+            const sidebarList = document.getElementById('sidebarList');
+            sidebarList.innerHTML = '';
+
+            const bounds = [];
+
+            todosLosDeliveries.forEach(delivery => {
+                const coords = parsearCoordenadas(delivery['UBICACION DELIVERY ACTIVO']);
+                
+                if (coords) {
+                    // Crear icono personalizado
+                    const icon = L.divIcon({
+                        className: 'custom-marker',
+                        html: '<div class="delivery-marker">🚚</div>',
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20],
+                        popupAnchor: [0, -20]
+                    });
+
+                    const direccion = delivery._direccionActual || 'Dirección no disponible';
+                    const ciudad = delivery._ciudadActual || delivery.CIUDAD || 'Sin ciudad';
+                    const distancia = delivery._distanciaBase;
+
+                    // Crear marker
+                    const marker = L.marker([coords.lat, coords.lng], { icon: icon })
+                        .addTo(map)
+                        .bindPopup(`
+                            <div class="popup-content">
+                                <div class="popup-name">${delivery.NOMBRE || 'Sin nombre'}</div>
+                                <div class="popup-info">🏙️ ${ciudad}</div>
+                                <div class="popup-info">📍 ${direccion}</div>
+                                <div class="popup-info">📧 ${delivery.CORREO || 'Sin correo'}</div>
+                                ${distancia ? `<div class="popup-info" style="color: #10b981; font-weight: bold;">🏠 ${distancia.km} km • ${distancia.minutos} min a base</div>` : ''}
+                            </div>
+                        `, { className: 'custom-popup' });
+
+                    marker.on('click', () => {
+                        seleccionarDelivery(delivery.ID_DELIVERY, coords);
+                    });
+
+                    markers[delivery.ID_DELIVERY] = marker;
+                    bounds.push([coords.lat, coords.lng]);
+
+                    // Agregar a sidebar
+                    const sidebarItem = document.createElement('div');
+                    sidebarItem.className = 'sidebar-delivery';
+                    sidebarItem.setAttribute('data-delivery-id', delivery.ID_DELIVERY);
+                    sidebarItem.innerHTML = `
+                        <div class="sidebar-delivery-name">🚚 ${delivery.NOMBRE || 'Sin nombre'}</div>
+                        <div class="sidebar-delivery-location">${ciudad} - ${direccion}</div>
+                        ${distancia ? `<div class="sidebar-delivery-distance">🏠 ${distancia.km} km • ${distancia.minutos} min a base</div>` : ''}
+                    `;
+                    sidebarItem.onclick = () => {
+                        seleccionarDelivery(delivery.ID_DELIVERY, coords);
+                        // Cerrar sidebar en móvil
+                        if (window.innerWidth <= 768) {
+                            toggleSidebar();
+                        }
+                    };
+                    sidebarList.appendChild(sidebarItem);
+                }
+            });
+
+            // Guardar bounds originales
+            originalBounds = bounds.length > 0 ? bounds : null;
+
+            // Ajustar vista para mostrar todos los markers automáticamente
+            if (bounds.length > 0) {
+                // Si hay deliveries activos, centrar el mapa en ellos
+                map.fitBounds(bounds, { 
+                    padding: [100, 100],
+                    maxZoom: 13  // Zoom máximo para no acercarse demasiado a un solo delivery
+                });
+            } else {
+                // Si no hay deliveries activos, mantener vista general de Honduras
+                map.setView([14.5, -87.5], 9);
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (!searchTerm) {
+                actualizarVista();
+                return;
+            }
+
+            const deliveriesFiltrados = todosLosDeliveries.filter(d => {
+                return (
+                    (d.NOMBRE || '').toLowerCase().includes(searchTerm) ||
+                    (d.CIUDAD || '').toLowerCase().includes(searchTerm) ||
+                    (d._ciudadActual || '').toLowerCase().includes(searchTerm) ||
+                    (d._direccionActual || '').toLowerCase().includes(searchTerm) ||
+                    (d['COLONIA/SECTOR'] || '').toLowerCase().includes(searchTerm) ||
+                    (d.CORREO || '').toLowerCase().includes(searchTerm) ||
+                    (d.ID_DELIVERY || '').toString().toLowerCase().includes(searchTerm)
+                );
+            });
+
+            const temp = todosLosDeliveries;
+            todosLosDeliveries = deliveriesFiltrados;
+            actualizarVista();
+            todosLosDeliveries = temp;
+        });
+
+        // Inicializar
+        cargarDeliveries();
+
+        // Auto-actualización cada 30 segundos
+        async function iniciarCicloActualizacion() {
+            try {
+                await cargarDeliveries();
+            } catch (error) {
+                console.error("Error en el ciclo:", error);
+            } finally {
+                setTimeout(iniciarCicloActualizacion, 30000);
+            }
+        }
+
+        iniciarCicloActualizacion();
+
+        // Activar audio en móviles
+        document.addEventListener('click', function() {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }, { once: true });
+
+        // Manejar resize para actualizar mapa
+        window.addEventListener('resize', () => {
+            if (map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.2);
+            padding: 12px 16px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 26px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .controls {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .view-btn.active {
+            background: #10b981;
+            color: white;
+        }
+
+        .view-btn:hover:not(.active) {
+            background: #e5e7eb;
+        }
+
+        .btn-refresh {
+            padding: 12px 24px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-refresh:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-back {
+            padding: 12px 24px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-back:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+
+        .main-container {
+            height: calc(100vh - 180px);
+            display: flex;
+        }
+
+        /* Vista de Lista */
+        .list-view {
+            width: 100%;
+            padding: 20px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .list-view.active {
+            display: block;
+        }
+
+        .deliveries-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .delivery-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .delivery-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #10b981;
+        }
+
+        .delivery-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+        }
+
+        .delivery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .delivery-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .delivery-status {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .delivery-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .info-icon {
+            color: #10b981;
+            min-width: 16px;
+        }
+
+        .delivery-id {
+            background: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            color: #6b7280;
+        }
+
         /* Vista de Mapa */
         .map-view {
             width: 100%;
