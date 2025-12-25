@@ -1226,7 +1226,7 @@ async function iniciarCicloActualizacion() {
         console.error("Error en el ciclo:", error);
     } finally {
         // Espera 5 segundos antes de volver a pedir datos
-        setTimeout(iniciarCicloActualizacion, 5000);
+        setTimeout(iniciarCicloActualizacion, 10000);
     }
 }
 
