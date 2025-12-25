@@ -112,6 +112,24 @@
             transform: translateY(-1px);
         }
 
+        .btn-deliveries {
+            padding: 12px 24px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-deliveries:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
         .filter-chips {
             display: flex;
             gap: 10px;
@@ -598,6 +616,7 @@
             <span class="search-icon">🔍</span>
         </div>
         <button class="btn-refresh" onclick="cargarPedidos()">🔄 Actualizar</button>
+        <a href="deliveries.html" class="btn-deliveries">🚚 Ver Deliveries</a>
         
         <div class="filter-chips">
             <div class="chip active" data-filter="todos" onclick="filtrarPorTipo(this)">Todos</div>
@@ -1219,25 +1238,23 @@
         });
 
         cargarPedidos();
-async function iniciarCicloActualizacion() {
-    try {
-        await cargarPedidos();
-    } catch (error) {
-        console.error("Error en el ciclo:", error);
-    } finally {
-        // Espera 5 segundos antes de volver a pedir datos
-        setTimeout(iniciarCicloActualizacion, 30000);
-    }
-}
+        async function iniciarCicloActualizacion() {
+            try {
+                await cargarPedidos();
+            } catch (error) {
+                console.error("Error en el ciclo:", error);
+            } finally {
+                setTimeout(iniciarCicloActualizacion, 30000);
+            }
+        }
 
-// Arranca el proceso
-iniciarCicloActualizacion();
-        // Función para activar el sonido en móviles tras el primer toque
-document.addEventListener('click', function() {
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-}, { once: true }); // Solo se ejecuta la primera vez que tocas
+        iniciarCicloActualizacion();
+        
+        document.addEventListener('click', function() {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }, { once: true });
     </script>
 </body>
 </html>
