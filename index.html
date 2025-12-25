@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Pedidos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .tipo-pedido-container {
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .tipo-pedido-container h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .tipo-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-tipo {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-compra {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-compra:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-traslado {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-traslado:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .form-container {
+            display: none;
+            padding: 20px;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .vehiculo-buttons,
+        .sino-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-option.active {
+            background: #1f2937;
+            color: white;
+            border-color: #1f2937;
+        }
+
+        .btn-option:hover {
+            border-color: #9ca3af;
+        }
+
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .counter input {
+            flex: 1;
+            text-align: center;
+        }
+
+        .counter button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .counter button:hover {
+            background: #5568d3;
+        }
+
+        .tipo-pago-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-pago {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .btn-pago.active {
+            background: #1f2937;
+            color: white;
+            border-color: #1f2937;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            width: 100%;
+            padding: 12px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Formulario de Pedidos</h1>
+            <p>Sistema de registro de pedidos</p>
+        </div>
+
+        <div id="tipoPedidoSection" class="tipo-pedido-container">
+            <h2>Seleccione el tipo de pedido:</h2>
+            <div class="tipo-buttons">
+                <button class="btn-tipo btn-compra" onclick="selectTipoPedido('COMPRA')">
+                    🛒 Compra
+                </button>
+                <button class="btn-tipo btn-traslado" onclick="selectTipoPedido('TRASLADO')">
+                    🚚 Traslado
+                </button>
+            </div>
+        </div>
+
+        <div id="formSection" class="form-container">
+            <button class="back-btn" onclick="volverSeleccion()">← Volver a selección</button>
+            
+            <div id="message"></div>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Guardando pedido...</p>
+            </div>
+
+            <form id="pedidoForm">
+                <div class="form-group">
+                    <label>NOMBRE DE CLIENTE<span class="required">*</span></label>
+                    <input type="text" name="nombreCliente" required>
+                </div>
+
+                <div class="form-group">
+                    <label>PEDIDO PRINCIPAL</label>
+                    <input type="text" name="pedidoPrincipal">
+                </div>
+
+                <div class="form-group">
+                    <label>CIUDAD<span class="required">*</span></label>
+                    <select name="ciudad" required>
+                        <option value="">Seleccione...</option>
+                        <option value="Tegucigalpa">Tegucigalpa</option>
+                        <option value="San Pedro Sula">San Pedro Sula</option>
+                        <option value="La Ceiba">La Ceiba</option>
+                        <option value="Choluteca">Choluteca</option>
+                        <option value="Comayagua">Comayagua</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>SECTOR<span class="required">*</span></label>
+                    <input type="text" name="sector" required>
+                </div>
+
+                <div class="form-group">
+                    <label>DIRECCIÓN<span class="required">*</span></label>
+                    <textarea name="direccion" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>TIPO DE PEDIDO<span class="required">*</span></label>
+                    <input type="text" name="tipoPedido" readonly style="background: #f3f4f6;">
+                </div>
+
+                <div class="form-group">
+                    <label>VEHÍCULO<span class="required">*</span></label>
+                    <div class="vehiculo-buttons">
+                        <button type="button" class="btn-option" data-value="MOTO" onclick="selectVehiculo('MOTO', this)">MOTO</button>
+                        <button type="button" class="btn-option" data-value="CARRO" onclick="selectVehiculo('CARRO', this)">CARRO</button>
+                    </div>
+                    <input type="hidden" name="vehiculo" required>
+                </div>
+
+                <div class="form-group">
+                    <label>OBSERVACIONES<span class="required">*</span></label>
+                    <textarea name="observaciones" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>LUGAR DE RECOLECTA</label>
+                    <select name="lugarRecolecta">
+                        <option value="MANDADITOS">MANDADITOS</option>
+                        <option value="OTRO">OTRO</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>UBICACIÓN DE RECOLECTA<span class="required">*</span></label>
+                    <input type="text" name="ubicacionRecolecta" required>
+                </div>
+
+                <div class="form-group">
+                    <label>CELULAR DE QUIEN ENTREGA</label>
+                    <input type="text" name="celularEntrega">
+                </div>
+
+                <div class="form-group">
+                    <label>TIENE QUE PAGAR EN ESTABLECIMIENTO<span class="required">*</span></label>
+                    <div class="sino-buttons">
+                        <button type="button" class="btn-option" onclick="selectSiNo('pagarEstablecimiento', 'SI', this)">SÍ</button>
+                        <button type="button" class="btn-option" onclick="selectSiNo('pagarEstablecimiento', 'NO', this)">NO</button>
+                    </div>
+                    <input type="hidden" name="pagarEstablecimiento" required>
+                </div>
+
+                <div class="form-group">
+                    <label>YA ESTÁ ENCARGADO<span class="required">*</span></label>
+                    <div class="sino-buttons">
+                        <button type="button" class="btn-option" onclick="selectSiNo('yaEncargado', 'SI', this)">SÍ</button>
+                        <button type="button" class="btn-option" onclick="selectSiNo('yaEncargado', 'NO', this)">NO</button>
+                    </div>
+                    <input type="hidden" name="yaEncargado" required>
+                </div>
+
+                <div class="form-group">
+                    <label>CUPÓN DE DESCUENTO</label>
+                    <input type="text" name="cuponDescuento">
+                </div>
+
+                <div class="form-group">
+                    <label>KM DISTANCIA</label>
+                    <input type="number" name="kmDistancia" step="0.01" value="0.00">
+                </div>
+
+                <div class="form-group">
+                    <label>COSTO SUGERIDO</label>
+                    <input type="number" name="costoSugerido" step="0.01" value="50.00">
+                </div>
+
+                <div class="form-group">
+                    <label>TOTAL PRODUCTOS</label>
+                    <div class="counter">
+                        <button type="button" onclick="changeCounter('totalProductos', -1)">−</button>
+                        <input type="number" name="totalProductos" value="0" min="0">
+                        <button type="button" onclick="changeCounter('totalProductos', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>CELULAR QUIEN RECIBE<span class="required">*</span></label>
+                    <input type="text" name="celularRecibe" required>
+                </div>
+
+                <div class="form-group">
+                    <label>UBICACIONES FRECUENTES</label>
+                    <select name="ubicacionesFrecuentes">
+                        <option value="">Seleccione...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>UBICACIÓN DE ENTREGA<span class="required">*</span></label>
+                    <input type="text" name="ubicacionEntrega" required>
+                </div>
+
+                <div class="form-group">
+                    <label>ENVÍO<span class="required">*</span></label>
+                    <div class="counter">
+                        <button type="button" onclick="changeCounter('envio', -5)">−</button>
+                        <input type="number" name="envio" value="0.00" step="0.01" min="0" oninput="calcularTotal()">
+                        <button type="button" onclick="changeCounter('envio', 5)">+</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>PROPINA</label>
+                    <div class="counter">
+                        <button type="button" onclick="changeCounter('propina', -5)">−</button>
+                        <input type="number" name="propina" value="0" min="0" oninput="calcularTotal()">
+                        <button type="button" onclick="changeCounter('propina', 5)">+</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>TOTAL + ENVÍO</label>
+                    <input type="number" name="totalEnvio" step="0.01" readonly style="background: #f3f4f6; font-weight: bold;">
+                </div>
+
+                <div class="form-group">
+                    <label>TIPO DE PAGO<span class="required">*</span></label>
+                    <div class="tipo-pago-buttons">
+                        <button type="button" class="btn-pago" onclick="selectTipoPago('EFECTIVO', this)">EFECTIVO</button>
+                        <button type="button" class="btn-pago" onclick="selectTipoPago('TRANSFERENCIA', this)">TRANSFERENCIA</button>
+                        <button type="button" class="btn-pago" onclick="selectTipoPago('LINK DE PAGO', this)">LINK DE PAGO</button>
+                    </div>
+                    <input type="hidden" name="tipoPago" required>
+                </div>
+
+                <div class="form-group" id="linkPagoGroup" style="display: none;">
+                    <label>LINK DE PAGO</label>
+                    <input type="text" name="linkPago">
+                </div>
+
+                <button type="submit" class="submit-btn">✓ Guardar Pedido</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANTE: Reemplaza esta URL con tu URL de Apps Script después del deploy
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_oOAfNXyIT6bMt-TFHoy_aYTKd1RCwYaH4lwZcCO2pH63ZYdJpA5EvNnEToLqDHEadg/exec';
+
+        let tipoPedidoSeleccionado = '';
+
+        function selectTipoPedido(tipo) {
+            tipoPedidoSeleccionado = tipo;
+            document.getElementById('tipoPedidoSection').style.display = 'none';
+            document.getElementById('formSection').classList.add('active');
+            document.querySelector('input[name="tipoPedido"]').value = tipo;
+        }
+
+        function volverSeleccion() {
+            document.getElementById('formSection').classList.remove('active');
+            document.getElementById('tipoPedidoSection').style.display = 'block';
+            document.getElementById('pedidoForm').reset();
+            hideMessage();
+        }
+
+        function selectVehiculo(valor, btn) {
+            document.querySelectorAll('.vehiculo-buttons .btn-option').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelector('input[name="vehiculo"]').value = valor;
+        }
+
+        function selectSiNo(campo, valor, btn) {
+            const container = btn.parentElement;
+            container.querySelectorAll('.btn-option').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelector(`input[name="${campo}"]`).value = valor;
+        }
+
+        function selectTipoPago(tipo, btn) {
+            document.querySelectorAll('.tipo-pago-buttons .btn-pago').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelector('input[name="tipoPago"]').value = tipo;
+            
+            const linkPagoGroup = document.getElementById('linkPagoGroup');
+            if (tipo === 'LINK DE PAGO') {
+                linkPagoGroup.style.display = 'block';
+            } else {
+                linkPagoGroup.style.display = 'none';
+            }
+        }
+
+        function changeCounter(fieldName, delta) {
+            const input = document.querySelector(`input[name="${fieldName}"]`);
+            const currentValue = parseFloat(input.value) || 0;
+            const newValue = Math.max(0, currentValue + delta);
+            input.value = newValue;
+            calcularTotal();
+        }
+
+        function calcularTotal() {
+            const totalProductos = parseFloat(document.querySelector('input[name="totalProductos"]').value) || 0;
+            const envio = parseFloat(document.querySelector('input[name="envio"]').value) || 0;
+            const propina = parseFloat(document.querySelector('input[name="propina"]').value) || 0;
+            
+            const total = totalProductos + envio + propina;
+            document.querySelector('input[name="totalEnvio"]').value = total.toFixed(2);
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+        }
+
+        function hideMessage() {
+            document.getElementById('message').style.display = 'none';
+        }
+
+        document.getElementById('pedidoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+
+            // Validaciones
+            if (!data.vehiculo) {
+                showMessage('Por favor seleccione un vehículo', 'error');
+                return;
+            }
+            if (!data.pagarEstablecimiento) {
+                showMessage('Por favor indique si debe pagar en establecimiento', 'error');
+                return;
+            }
+            if (!data.yaEncargado) {
+                showMessage('Por favor indique si ya está encargado', 'error');
+                return;
+            }
+            if (!data.tipoPago) {
+                showMessage('Por favor seleccione un tipo de pago', 'error');
+                return;
+            }
+
+            document.getElementById('loading').classList.add('active');
+            hideMessage();
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                
+                document.getElementById('loading').classList.remove('active');
+
+                if (result.success) {
+                    showMessage('✓ Pedido guardado exitosamente', 'success');
+                    setTimeout(() => {
+                        e.target.reset();
+                        volverSeleccion();
+                    }, 2000);
+                } else {
+                    showMessage('Error: ' + (result.error || 'No se pudo guardar el pedido'), 'error');
+                }
+            } catch (error) {
+                document.getElementById('loading').classList.remove('active');
+                showMessage('Error de conexión: ' + error.message, 'error');
+            }
+        });
+
+        // Calcular total al cargar
+        calcularTotal();
+    </script>
+</body>
+</html>  
