@@ -1232,6 +1232,12 @@ async function iniciarCicloActualizacion() {
 
 // Arranca el proceso
 iniciarCicloActualizacion();
+        // Función para activar el sonido en móviles tras el primer toque
+document.addEventListener('click', function() {
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+}, { once: true }); // Solo se ejecuta la primera vez que tocas
     </script>
 </body>
 </html>
