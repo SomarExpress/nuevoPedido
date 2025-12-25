@@ -687,14 +687,14 @@
         function inicializarMapa() {
             if (map) return;
 
-            // Centro entre Tegucigalpa y San Pedro Sula para ver toda la zona
-            // Coordenadas aproximadas del centro de Honduras (entre las principales ciudades)
+            // Inicializar mapa con vista general de Honduras
+            // El centro y zoom se ajustarán automáticamente según los deliveries activos
             map = L.map('map').setView([14.5, -87.5], 9);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19,
-                minZoom: 8
+                minZoom: 7
             }).addTo(map);
 
             actualizarMapa();
@@ -782,12 +782,16 @@
                 }
             });
 
-            // Ajustar vista para mostrar todos los markers
+            // Ajustar vista para mostrar todos los markers automáticamente
             if (bounds.length > 0) {
+                // Si hay deliveries activos, centrar el mapa en ellos
                 map.fitBounds(bounds, { 
-                    padding: [80, 80],
-                    maxZoom: 12  // Limitar el zoom máximo para que no se acerque demasiado
+                    padding: [100, 100],
+                    maxZoom: 13  // Zoom máximo para no acercarse demasiado a un solo delivery
                 });
+            } else {
+                // Si no hay deliveries activos, mantener vista general de Honduras
+                map.setView([14.5, -87.5], 9);
             }
         }
 
