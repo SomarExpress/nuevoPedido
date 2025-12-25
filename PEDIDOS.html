@@ -216,89 +216,12 @@
             padding: 15px;
             cursor: pointer;
             transition: all 0.3s;
-            position: relative;
         }
 
         .pedido-card:hover {
             border-color: #667eea;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
-        }
-
-        .pedido-card.alerta-tiempo {
-            background: #fee2e2;
-            border-color: #dc2626;
-            animation: pulse-red 2s infinite;
-        }
-
-        @keyframes pulse-red {
-            0%, 100% { 
-                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
-            }
-            50% { 
-                box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
-            }
-        }
-
-        .alerta-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #dc2626;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: bold;
-            animation: shake 0.5s infinite;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .tiempo-transcurrido {
-            background: #e0e7ff;
-            color: #3730a3;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .tiempo-transcurrido.warning {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .tiempo-transcurrido.danger {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .alerta-sin-aceptar {
-            background: #fee2e2;
-            border: 1px solid #dc2626;
-            color: #991b1b;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
         }
 
         .pedido-header {
@@ -371,23 +294,14 @@
             font-size: 16px;
         }
 
-        .pedido-estatus {
-            background: #f3f4f6;
-            color: #374151;
-            padding: 4px 10px;
-            border-radius: 12px;
+        .pedido-delivery {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
-            text-transform: uppercase;
-            display: inline-block;
         }
-
-        .estatus-pendiente { background: #fef3c7; color: #92400e; }
-        .estatus-asignado { background: #dbeafe; color: #1e40af; }
-        .estatus-establecimiento { background: #e0e7ff; color: #3730a3; }
-        .estatus-camino { background: #dcfce7; color: #166534; }
-        .estatus-entregando { background: #fef3c7; color: #92400e; }
-        .estatus-finalizado { background: #d1fae5; color: #065f46; }
 
         .empty-state {
             text-align: center;
@@ -634,32 +548,6 @@
         let cargaInicial = true;
 
         async function cargarPedidos() {
-            // Verificar configuración primero
-            if (cargaInicial && !verificarConfiguracion()) {
-                document.getElementById('loadingState').innerHTML = `
-                    <div style="padding: 40px; text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
-                        <h2 style="color: #dc2626; margin-bottom: 15px;">Error de Configuración</h2>
-                        <p style="color: #374151; margin-bottom: 20px;">
-                            Debes configurar la URL de tu Apps Script
-                        </p>
-                        <div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: left; max-width: 500px; margin: 0 auto;">
-                            <strong>Pasos para configurar:</strong>
-                            <ol style="margin: 10px 0; padding-left: 20px;">
-                                <li>Ve a Apps Script</li>
-                                <li>Clic en "Implementar" > "Nueva implementación"</li>
-                                <li>Tipo: "Aplicación web"</li>
-                                <li>Ejecutar como: "Yo"</li>
-                                <li>Acceso: "Cualquier persona"</li>
-                                <li>Copia la URL que termina en /exec</li>
-                                <li>Pégala en canvas.html línea ~730</li>
-                            </ol>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
             try {
                 // Solo mostrar loading en la primera carga
                 if (cargaInicial) {
@@ -667,39 +555,16 @@
                     document.getElementById('canvasContainer').style.display = 'none';
                 }
 
-                const response = await fetch(`${SCRIPT_URL}?action=getPedidos&timestamp=${Date.now()}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    mode: 'cors'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}\n\nVerifica:\n1. Apps Script desplegado como aplicación web\n2. Acceso configurado como "Cualquier persona"\n3. URL correcta terminando en /exec`);
-                }
-
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const textoRespuesta = await response.text();
-                    console.error('Respuesta recibida:', textoRespuesta.substring(0, 500));
-                    throw new Error('El servidor devolvió HTML en lugar de JSON.\n\nEsto significa que:\n• El Apps Script NO está desplegado como aplicación web\n• O el parámetro action=getPedidos no se está enviando correctamente\n\nSolución:\n1. Re-implementa el Apps Script\n2. Asegúrate de elegir "Nueva versión"\n3. Tipo: Aplicación web\n4. Acceso: Cualquier persona');
-                }
-
+                const response = await fetch(`${SCRIPT_URL}?action=getPedidos`);
                 const data = await response.json();
 
                 if (data.success) {
-                    // Detectar cambios antes de actualizar
-                    if (!cargaInicial) {
-                        detectarCambios(data.pedidos);
-                    }
-                    
                     todosLosPedidos = data.pedidos;
                     procesarYMostrarPedidos();
                     actualizarEstadisticas();
                 } else {
                     if (cargaInicial) {
-                        throw new Error(data.error || 'Error desconocido al obtener pedidos');
+                        alert('Error al cargar pedidos: ' + (data.error || 'Error desconocido'));
                     }
                 }
 
@@ -709,36 +574,10 @@
                     cargaInicial = false;
                 }
             } catch (error) {
-                console.error('Error completo:', error);
+                console.error('Error:', error);
                 if (cargaInicial) {
-                    document.getElementById('loadingState').innerHTML = `
-                        <div style="padding: 40px; text-align: center; max-width: 600px; margin: 0 auto;">
-                            <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
-                            <h2 style="color: #dc2626; margin-bottom: 15px;">Error de Conexión</h2>
-                            <p style="color: #374151; margin-bottom: 20px; white-space: pre-line;">
-                                ${error.message}
-                            </p>
-                            <button onclick="location.reload()" style="
-                                padding: 12px 24px;
-                                background: #667eea;
-                                color: white;
-                                border: none;
-                                border-radius: 8px;
-                                cursor: pointer;
-                                font-weight: 600;
-                                font-size: 14px;
-                            ">🔄 Reintentar</button>
-                            <div style="margin-top: 30px; padding: 20px; background: #f3f4f6; border-radius: 8px; text-align: left;">
-                                <strong style="display: block; margin-bottom: 10px;">🔍 Pasos de diagnóstico:</strong>
-                                <ol style="margin: 0; padding-left: 20px; color: #6b7280;">
-                                    <li style="margin: 8px 0;">Abre: <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">${SCRIPT_URL}?action=getPedidos</code></li>
-                                    <li style="margin: 8px 0;">Si ves HTML → Re-implementa Apps Script</li>
-                                    <li style="margin: 8px 0;">Si ves JSON → El problema está en el código</li>
-                                    <li style="margin: 8px 0;">Si ves error 404 → Verifica la URL</li>
-                                </ol>
-                            </div>
-                        </div>
-                    `;
+                    alert('Error de conexión: ' + error.message);
+                    document.getElementById('loadingState').style.display = 'none';
                 }
             }
         }
@@ -752,13 +591,12 @@
             todosLosPedidos.forEach(pedido => {
                 const estatus = (pedido.ESTATUS || '').toUpperCase().trim();
                 const fechaPedido = pedido.FECHA ? new Date(pedido.FECHA).toDateString() : '';
-                const tieneDelivery = pedido.DELIVERY && pedido.DELIVERY.trim() !== '';
 
                 if (estatus === 'FINALIZADO' && fechaPedido === hoy) {
                     finalizados.push(pedido);
-                } else if (!tieneDelivery) {
+                } else if (estatus === 'PENDIENTE' || estatus === 'SIN ASIGNAR' || !estatus) {
                     sinAsignar.push(pedido);
-                } else if (['PENDIENTE', 'ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
+                } else if (['ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
                     enCurso.push(pedido);
                 }
             });
@@ -790,12 +628,12 @@
         function crearTarjetaPedido(pedido) {
             const tipoPedido = (pedido['TIPO DE PEDIDO'] || 'COMPRA').toUpperCase();
             const vehiculo = (pedido.VEHICULO || 'MOTO').toUpperCase();
-            const total = parseFloat(pedido['TOTAL + ENVIO']) || 0;
+            const total = parseFloat(pedido['VT ENVIO']) || 0;
             const delivery = pedido.DELIVERY || 'Sin asignar';
             const comercio = pedido['NOMBRE DE COMERCIO'] || 'Sin comercio';
             const ciudad = pedido.CIUDAD || '';
             const sector = pedido.SECTOR || '';
-            const noPedido = pedido['NO. PEDIDO'] || pedido.ID || 'S/N';
+            const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
             const hora = pedido['HORA ASIGNADO'] || '';
 
             return `
@@ -837,7 +675,7 @@
         function abrirDetalles(pedido) {
             const modal = document.getElementById('modal');
             const modalBody = document.getElementById('modalBody');
-            const noPedido = pedido['NO. PEDIDO'] || pedido.ID || 'S/N';
+            const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
 
             document.getElementById('modalTitle').textContent = `Pedido #${noPedido}`;
 
@@ -901,7 +739,7 @@
                     <div class="detail-grid">
                         <div class="detail-item">
                             <div class="detail-label">Total Productos</div>
-                            <div class="detail-value">L ${parseFloat(pedido['TOTAL PRODUCTOS'] || 0).toFixed(2)}</div>
+                            <div class="detail-value">L ${parseFloat(pedido['TOTAL'] || 0).toFixed(2)}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Envío</div>
@@ -913,7 +751,7 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Total + Envío</div>
-                            <div class="detail-value" style="color: #667eea; font-size: 16px;">L ${parseFloat(pedido['TOTAL + ENVIO'] || 0).toFixed(2)}</div>
+                            <div class="detail-value" style="color: #667eea; font-size: 16px;">L ${parseFloat(pedido['VT ENVIO'] || 0).toFixed(2)}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Tipo de Pago</div>
@@ -929,16 +767,6 @@
                 <div class="detail-section">
                     <div class="section-title">⏰ Tiempos</div>
                     <div class="detail-grid">
-                        <div class="detail-item">
-                            <div class="detail-label">Tiempo Total</div>
-                            <div class="detail-value" style="color: #667eea; font-size: 16px; font-weight: bold;">
-                                ${calcularTiempoTranscurrido(pedido).texto}
-                            </div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Fecha Ingreso</div>
-                            <div class="detail-value">${pedido.FECHA ? new Date(pedido.FECHA).toLocaleString('es-HN') : 'N/A'}</div>
-                        </div>
                         <div class="detail-item">
                             <div class="detail-label">Hora Asignado</div>
                             <div class="detail-value">${pedido['HORA ASIGNADO'] || 'N/A'}</div>
@@ -990,7 +818,7 @@
                     const fechaPedido = p.FECHA ? new Date(p.FECHA).toDateString() : '';
                     return fechaPedido === hoy && p.ESTATUS === 'FINALIZADO';
                 })
-                .reduce((sum, p) => sum + (parseFloat(p['TOTAL + ENVIO']) || 0), 0);
+                .reduce((sum, p) => sum + (parseFloat(p['VT ENVIO']) || 0), 0);
 
             document.getElementById('totalPedidos').textContent = total;
             document.getElementById('totalIngresos').textContent = `L ${ingresosHoy.toFixed(2)}`;
@@ -1031,7 +859,7 @@
 
             const pedidosFiltrados = todosLosPedidos.filter(p => {
                 return (
-                    (p['NO. PEDIDO'] || '').toString().toLowerCase().includes(searchTerm) ||
+                    (p['NO ORDEN'] || '').toString().toLowerCase().includes(searchTerm) ||
                     (p['NOMBRE DE COMERCIO'] || '').toLowerCase().includes(searchTerm) ||
                     (p.DELIVERY || '').toLowerCase().includes(searchTerm) ||
                     (p.CIUDAD || '').toLowerCase().includes(searchTerm) ||
