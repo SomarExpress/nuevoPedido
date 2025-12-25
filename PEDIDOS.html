@@ -633,7 +633,7 @@
             const comercio = pedido['NOMBRE DE COMERCIO'] || 'Sin comercio';
             const ciudad = pedido.CIUDAD || '';
             const sector = pedido.SECTOR || '';
-            const noPedido = pedido['NO. PEDIDO'] || pedido.ID || 'S/N';
+            const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
             const hora = pedido['HORA ASIGNADO'] || '';
 
             return `
@@ -675,7 +675,7 @@
         function abrirDetalles(pedido) {
             const modal = document.getElementById('modal');
             const modalBody = document.getElementById('modalBody');
-            const noPedido = pedido['NO. PEDIDO'] || pedido.ID || 'S/N';
+            const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
 
             document.getElementById('modalTitle').textContent = `Pedido #${noPedido}`;
 
@@ -739,7 +739,7 @@
                     <div class="detail-grid">
                         <div class="detail-item">
                             <div class="detail-label">Total Productos</div>
-                            <div class="detail-value">L ${parseFloat(pedido['TOTAL PRODUCTOS'] || 0).toFixed(2)}</div>
+                            <div class="detail-value">L ${parseFloat(pedido['TOTAL'] || 0).toFixed(2)}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Envío</div>
@@ -751,7 +751,7 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Total + Envío</div>
-                            <div class="detail-value" style="color: #667eea; font-size: 16px;">L ${parseFloat(pedido['TOTAL + ENVIO'] || 0).toFixed(2)}</div>
+                            <div class="detail-value" style="color: #667eea; font-size: 16px;">L ${parseFloat(pedido['VT ENVIO'] || 0).toFixed(2)}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Tipo de Pago</div>
@@ -818,7 +818,7 @@
                     const fechaPedido = p.FECHA ? new Date(p.FECHA).toDateString() : '';
                     return fechaPedido === hoy && p.ESTATUS === 'FINALIZADO';
                 })
-                .reduce((sum, p) => sum + (parseFloat(p['TOTAL + ENVIO']) || 0), 0);
+                .reduce((sum, p) => sum + (parseFloat(p['VT ENVIO']) || 0), 0);
 
             document.getElementById('totalPedidos').textContent = total;
             document.getElementById('totalIngresos').textContent = `L ${ingresosHoy.toFixed(2)}`;
@@ -859,7 +859,7 @@
 
             const pedidosFiltrados = todosLosPedidos.filter(p => {
                 return (
-                    (p['NO. PEDIDO'] || '').toString().toLowerCase().includes(searchTerm) ||
+                    (p['NO ORDEN'] || '').toString().toLowerCase().includes(searchTerm) ||
                     (p['NOMBRE DE COMERCIO'] || '').toLowerCase().includes(searchTerm) ||
                     (p.DELIVERY || '').toLowerCase().includes(searchTerm) ||
                     (p.CIUDAD || '').toLowerCase().includes(searchTerm) ||
