@@ -681,8 +681,8 @@
             deliveriesAnteriores = [...deliveriesNuevos];
         }
 
-        // Calcular distancia usando fórmula de Haversine
-        function calcularDistancia(lat1, lon1, lat2, lon2) {
+        // Calcular distancia usando fórmula de Haversine (línea recta)
+        function calcularDistanciaLinea(lat1, lon1, lat2, lon2) {
             const R = 6371; // Radio de la Tierra en km
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -700,6 +700,39 @@
                 km: distancia.toFixed(2),
                 minutos: tiempoMinutos
             };
+        }
+
+        // Calcular distancia real por carretera usando OSRM
+        async function calcularDistanciaCarretera(lat1, lon1, lat2, lon2) {
+            try {
+                // OSRM API - Servicio público gratuito
+                const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const distanciaKm = (route.distance / 1000).toFixed(2); // Convertir metros a km
+                    const tiempoMinutos = Math.round(route.duration / 60); // Convertir segundos a minutos
+                    
+                    return {
+                        km: distanciaKm,
+                        minutos: tiempoMinutos,
+                        tipo: 'carretera'
+                    };
+                } else {
+                    // Si OSRM falla, usar cálculo de línea recta como fallback
+                    console.warn('OSRM no pudo calcular la ruta, usando distancia en línea recta');
+                    const fallback = calcularDistanciaLinea(lat1, lon1, lat2, lon2);
+                    return { ...fallback, tipo: 'linea' };
+                }
+            } catch (error) {
+                console.error('Error al calcular distancia por carretera:', error);
+                // Fallback a distancia en línea recta
+                const fallback = calcularDistanciaLinea(lat1, lon1, lat2, lon2);
+                return { ...fallback, tipo: 'linea' };
+            }
         }
 
         // Geocodificación inversa usando Nominatim (OpenStreetMap)
@@ -788,12 +821,13 @@
             const promesas = todosLosDeliveries.map(async (delivery) => {
                 const coords = parsearCoordenadas(delivery['UBICACION DELIVERY ACTIVO']);
                 if (coords) {
+                    // Cargar dirección
                     const direccionData = await obtenerDireccion(coords.lat, coords.lng);
                     delivery._direccionActual = direccionData.direccion;
                     delivery._ciudadActual = direccionData.ciudad;
                     
-                    // Calcular distancia a la base
-                    const distancia = calcularDistancia(
+                    // Calcular distancia a la base usando OSRM (distancia real por carretera)
+                    const distancia = await calcularDistanciaCarretera(
                         coords.lat, coords.lng,
                         BASE_LOCATION.lat, BASE_LOCATION.lng
                     );
@@ -801,7 +835,8 @@
                 }
             });
             
-            await Promise.all(promesas);
+            // Esperar todas las promesas pero no bloquear si alguna falla
+            await Promise.allSettled(promesas);
         }
 
         function actualizarEstadisticas() {
@@ -857,6 +892,10 @@
                 const direccion = delivery._direccionActual || 'Cargando dirección...';
                 const ciudad = delivery._ciudadActual || delivery.CIUDAD || 'Ciudad no disponible';
                 const distancia = delivery._distanciaBase;
+                
+                // Icono según el tipo de distancia
+                const tipoDistancia = distancia?.tipo === 'carretera' ? '🛣️' : '📏';
+                const tipoTexto = distancia?.tipo === 'carretera' ? 'Por carretera' : 'Línea recta';
 
                 return `
                 <div class="delivery-card">
@@ -879,9 +918,10 @@
                         </div>
                         ${distancia ? `
                         <div class="distance-info">
-                            <span>🏠 Distancia a base:</span>
+                            <span>${tipoDistancia} Distancia a base:</span>
                             <span class="distance-value">${distancia.km} km • ${distancia.minutos} min</span>
                         </div>
+                        <div style="font-size: 10px; color: #6b7280; text-align: right; margin-top: 4px;">${tipoTexto}</div>
                         ` : ''}
                     </div>
                     <div class="delivery-id">ID: ${delivery.ID_DELIVERY || 'N/A'}</div>
