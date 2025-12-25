@@ -216,12 +216,47 @@
             padding: 15px;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
         }
 
         .pedido-card:hover {
             border-color: #667eea;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .pedido-card.alerta-tiempo {
+            background: #fee2e2;
+            border-color: #dc2626;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+            }
+            50% { 
+                box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+            }
+        }
+
+        .alerta-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         .pedido-header {
@@ -249,6 +284,24 @@
         .badge-traslado { background: #dbeafe; color: #1e40af; }
         .badge-moto { background: #fef3c7; color: #92400e; }
         .badge-carro { background: #e0e7ff; color: #3730a3; }
+
+        .pedido-estatus {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .estatus-pendiente { background: #fef3c7; color: #92400e; }
+        .estatus-asignado { background: #dbeafe; color: #1e40af; }
+        .estatus-establecimiento { background: #e0e7ff; color: #3730a3; }
+        .estatus-camino { background: #dcfce7; color: #166534; }
+        .estatus-entregando { background: #fef3c7; color: #92400e; }
+        .estatus-finalizado { background: #d1fae5; color: #065f46; }
 
         .pedido-info {
             display: flex;
@@ -295,12 +348,54 @@
         }
 
         .pedido-delivery {
-            background: #fef3c7;
-            color: #92400e;
+            background: #e0e7ff;
+            color: #3730a3;
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
+        }
+
+        .tiempo-transcurrido {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tiempo-transcurrido.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .tiempo-transcurrido.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alerta-sin-aceptar {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            color: #991b1b;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
         .empty-state {
@@ -436,6 +531,35 @@
             font-weight: 500;
         }
 
+        .notification-dot {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+            display: none;
+        }
+
+        .notification-dot.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         @media (max-width: 768px) {
             .canvas-container {
                 grid-template-columns: 1fr;
@@ -538,27 +662,113 @@
         </div>
     </div>
 
+    <div id="notification" class="notification-dot"></div>
+
     <script>
         // IMPORTANTE: Reemplaza con tu URL de Apps Script
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZLUA_0rFB-ma3s_K18Jq1M5FR4MYKF0b_e1fbfceeYZ2bwsxMZWD3sjYe0NEsxb9f8A/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQcJdpvmKoOnqQKEWl8vWHsnCNJhfc3bQO2MjRIGutOtTjouRnIZNLqKb9ODrdYdWsiQ/exec';
         
         let todosLosPedidos = [];
         let filtroActual = 'todos';
-
         let cargaInicial = true;
+        let pedidosAnteriores = [];
+        let estatusAnteriores = {};
+
+        // Crear sonidos de notificación
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playNotificationSound(type = 'new') {
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if (type === 'new') {
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(1200, audioContext.currentTime + 0.2);
+                } else {
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(700, audioContext.currentTime + 0.1);
+                }
+                
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (error) {
+                console.log('Audio no disponible');
+            }
+        }
+
+        function mostrarNotificacion(mensaje, tipo = 'new') {
+            const notification = document.getElementById('notification');
+            notification.textContent = mensaje;
+            notification.classList.add('show');
+            
+            playNotificationSound(tipo);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function detectarCambios(pedidosNuevos) {
+            if (pedidosAnteriores.length === 0) {
+                pedidosAnteriores = [...pedidosNuevos];
+                pedidosNuevos.forEach(p => {
+                    const id = p['NO ORDEN'] || p.ID;
+                    estatusAnteriores[id] = p.ESTATUS;
+                });
+                return;
+            }
+
+            const idsAnteriores = new Set(pedidosAnteriores.map(p => p['NO ORDEN'] || p.ID));
+            const pedidosRealmenteNuevos = pedidosNuevos.filter(p => {
+                const id = p['NO ORDEN'] || p.ID;
+                return id && !idsAnteriores.has(id);
+            });
+
+            if (pedidosRealmenteNuevos.length > 0) {
+                const mensaje = pedidosRealmenteNuevos.length === 1 
+                    ? `🆕 Nuevo pedido #${pedidosRealmenteNuevos[0]['NO ORDEN'] || pedidosRealmenteNuevos[0].ID}`
+                    : `🆕 ${pedidosRealmenteNuevos.length} pedidos nuevos`;
+                mostrarNotificacion(mensaje, 'new');
+            }
+
+            pedidosNuevos.forEach(pedido => {
+                const id = pedido['NO ORDEN'] || pedido.ID;
+                if (id && estatusAnteriores[id] && estatusAnteriores[id] !== pedido.ESTATUS) {
+                    mostrarNotificacion(
+                        `📋 Pedido #${id}: ${estatusAnteriores[id] || 'Sin estatus'} → ${pedido.ESTATUS}`,
+                        'status'
+                    );
+                }
+                estatusAnteriores[id] = pedido.ESTATUS;
+            });
+
+            pedidosAnteriores = [...pedidosNuevos];
+        }
 
         async function cargarPedidos() {
             try {
-                // Solo mostrar loading en la primera carga
                 if (cargaInicial) {
                     document.getElementById('loadingState').style.display = 'block';
                     document.getElementById('canvasContainer').style.display = 'none';
                 }
 
-                const response = await fetch(`${SCRIPT_URL}?action=getPedidos`);
+                const response = await fetch(`${SCRIPT_URL}?action=getPedidos&timestamp=${Date.now()}`);
                 const data = await response.json();
 
                 if (data.success) {
+                    if (!cargaInicial) {
+                        detectarCambios(data.pedidos);
+                    }
+                    
                     todosLosPedidos = data.pedidos;
                     procesarYMostrarPedidos();
                     actualizarEstadisticas();
@@ -591,12 +801,13 @@
             todosLosPedidos.forEach(pedido => {
                 const estatus = (pedido.ESTATUS || '').toUpperCase().trim();
                 const fechaPedido = pedido.FECHA ? new Date(pedido.FECHA).toDateString() : '';
+                const tieneDelivery = pedido.DELIVERY && pedido.DELIVERY.trim() !== '';
 
                 if (estatus === 'FINALIZADO' && fechaPedido === hoy) {
                     finalizados.push(pedido);
-                } else if (estatus === 'PENDIENTE' || estatus === 'SIN ASIGNAR' || !estatus) {
+                } else if (!tieneDelivery) {
                     sinAsignar.push(pedido);
-                } else if (['ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
+                } else if (['PENDIENTE', 'ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
                     enCurso.push(pedido);
                 }
             });
@@ -625,6 +836,67 @@
             lista.innerHTML = pedidos.map(pedido => crearTarjetaPedido(pedido)).join('');
         }
 
+        function calcularTiempoTranscurrido(pedido) {
+            const ahora = new Date();
+            let fechaInicio;
+            let fechaFin = null;
+
+            if (pedido.FECHA) {
+                fechaInicio = new Date(pedido.FECHA);
+            } else {
+                return { texto: 'Sin fecha', clase: '', minutos: 0 };
+            }
+
+            if (pedido.ESTATUS === 'FINALIZADO' && pedido['HORA FINALIZADO']) {
+                fechaFin = new Date(pedido['HORA FINALIZADO']);
+            } else {
+                fechaFin = ahora;
+            }
+
+            const diferenciaMs = fechaFin - fechaInicio;
+            const minutos = Math.floor(diferenciaMs / 60000);
+            const horas = Math.floor(minutos / 60);
+            const mins = minutos % 60;
+
+            let texto = '';
+            if (horas > 0) {
+                texto = `${horas}h ${mins}m`;
+            } else {
+                texto = `${mins}m`;
+            }
+
+            const ciudad = (pedido.CIUDAD || '').toUpperCase();
+            let clase = '';
+            
+            if (ciudad === 'CHOLOMA') {
+                if (minutos > 40) {
+                    clase = 'danger';
+                } else if (minutos > 30) {
+                    clase = 'warning';
+                }
+            } else {
+                if (minutos > 80) {
+                    clase = 'danger';
+                } else if (minutos > 60) {
+                    clase = 'warning';
+                }
+            }
+
+            return { texto, clase, minutos };
+        }
+
+        function verificarAlertaSinAceptar(pedido) {
+            if (!pedido['HORA ASIGNADO'] || pedido.ESTATUS !== 'PENDIENTE') {
+                return false;
+            }
+
+            const horaAsignado = new Date(pedido['HORA ASIGNADO']);
+            const ahora = new Date();
+            const diferenciaMinutos = Math.floor((ahora - horaAsignado) / 60000);
+
+            return diferenciaMinutos >= 3;
+        }
+
         function crearTarjetaPedido(pedido) {
             const tipoPedido = (pedido['TIPO DE PEDIDO'] || 'COMPRA').toUpperCase();
             const vehiculo = (pedido.VEHICULO || 'MOTO').toUpperCase();
@@ -635,9 +907,29 @@
             const sector = pedido.SECTOR || '';
             const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
             const hora = pedido['HORA ASIGNADO'] || '';
+            const estatus = pedido.ESTATUS || 'Sin estatus';
+            
+            const tiempoInfo = calcularTiempoTranscurrido(pedido);
+            const alertaSinAceptar = verificarAlertaSinAceptar(pedido);
+            const alertaTiempo = tiempoInfo.clase === 'danger';
+
+            let cardClass = 'pedido-card';
+            if (alertaTiempo) {
+                cardClass += ' alerta-tiempo';
+            }
+
+            let estatusClase = 'pedido-estatus';
+            const estatusNorm = estatus.toUpperCase().trim().replace(/\s+/g, '-');
+            if (estatusNorm.includes('PENDIENTE')) estatusClase += ' estatus-pendiente';
+            else if (estatusNorm.includes('ASIGNADO')) estatusClase += ' estatus-asignado';
+            else if (estatusNorm.includes('ESTABLECIMIENTO')) estatusClase += ' estatus-establecimiento';
+            else if (estatusNorm.includes('CAMINO')) estatusClase += ' estatus-camino';
+            else if (estatusNorm.includes('ENTREGANDO')) estatusClase += ' estatus-entregando';
+            else if (estatusNorm.includes('FINALIZADO')) estatusClase += ' estatus-finalizado';
 
             return `
-                <div class="pedido-card" onclick='abrirDetalles(${JSON.stringify(pedido).replace(/'/g, "&#39;")})'>
+                <div class="${cardClass}" onclick='abrirDetalles(${JSON.stringify(pedido).replace(/'/g, "&#39;")})'>
+                    ${alertaTiempo ? '<div class="alerta-badge">⚠️ URGENTE</div>' : ''}
                     <div class="pedido-header">
                         <div class="pedido-id">#${noPedido}</div>
                         <div>
@@ -645,6 +937,10 @@
                         </div>
                     </div>
                     <div class="pedido-info">
+                        <div class="info-row">
+                            <span class="info-icon">📊</span>
+                            <span class="${estatusClase}">${estatus}</span>
+                        </div>
                         <div class="info-row">
                             <span class="info-icon">🏪</span>
                             <span class="info-value">${comercio}</span>
@@ -657,10 +953,19 @@
                             <span class="info-icon">🏍️</span>
                             <span class="pedido-badge badge-${vehiculo.toLowerCase()}">${vehiculo}</span>
                         </div>
+                        <div class="info-row">
+                            <span class="info-icon">⏱️</span>
+                            <span class="tiempo-transcurrido ${tiempoInfo.clase}">${tiempoInfo.texto}</span>
+                        </div>
                         ${delivery !== 'Sin asignar' ? `
                         <div class="info-row">
                             <span class="info-icon">👤</span>
                             <span class="pedido-delivery">${delivery}</span>
+                        </div>
+                        ` : ''}
+                        ${alertaSinAceptar ? `
+                        <div class="alerta-sin-aceptar">
+                            🚨 Delivery sin aceptar por más de 3 minutos
                         </div>
                         ` : ''}
                     </div>
@@ -678,6 +983,8 @@
             const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
 
             document.getElementById('modalTitle').textContent = `Pedido #${noPedido}`;
+
+            const tiempoInfo = calcularTiempoTranscurrido(pedido);
 
             modalBody.innerHTML = `
                 <div class="detail-section">
@@ -767,6 +1074,16 @@
                 <div class="detail-section">
                     <div class="section-title">⏰ Tiempos</div>
                     <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Tiempo Total</div>
+                            <div class="detail-value" style="color: #667eea; font-size: 16px; font-weight: bold;">
+                                ${tiempoInfo.texto}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Fecha Ingreso</div>
+                            <div class="detail-value">${pedido.FECHA ? new Date(pedido.FECHA).toLocaleString('es-HN') : 'N/A'}</div>
+                        </div>
                         <div class="detail-item">
                             <div class="detail-label">Hora Asignado</div>
                             <div class="detail-value">${pedido['HORA ASIGNADO'] || 'N/A'}</div>
