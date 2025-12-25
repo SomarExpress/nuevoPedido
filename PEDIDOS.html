@@ -461,7 +461,7 @@
         .modal-content {
             background: white;
             border-radius: 16px;
-            max-width: 600px;
+            max-width: 900px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
@@ -505,15 +505,21 @@
 
         .detail-section {
             margin-bottom: 25px;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
         }
 
         .section-title {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
             color: #667eea;
-            text-transform: uppercase;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .detail-grid {
@@ -523,9 +529,10 @@
         }
 
         .detail-item {
-            background: #f9fafb;
+            background: white;
             padding: 12px;
             border-radius: 8px;
+            border: 1px solid #e5e7eb;
         }
 
         .detail-label {
@@ -540,6 +547,12 @@
             font-size: 14px;
             color: #1f2937;
             font-weight: 500;
+        }
+
+        .detail-value.highlight {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 700;
         }
 
         .notification-dot {
@@ -586,6 +599,10 @@
 
             .search-box {
                 width: 100%;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -820,14 +837,12 @@
                 if (estatus === 'FINALIZADO' && fechaPedido === hoy) {
                     finalizados.push(pedido);
                 } else if (estatus === 'PENDIENTE' || ((estatus === 'PROGRAMADO') && !tieneDelivery)) {
-                    // MODIFICACIÓN: PENDIENTE siempre va a Sin Asignar
                     sinAsignar.push(pedido);
                 } else if (['ASIGNADO', 'EN ESTABLECIMIENTO', 'PEDIDO EN CAMINO', 'ENTREGANDO'].includes(estatus)) {
                     enCurso.push(pedido);
                 }
             });
 
-            // Ordenar finalizados de más reciente a más antiguo
             finalizados.sort((a, b) => {
                 const fechaA = a['HORA FINALIZADO'] ? new Date(a['HORA FINALIZADO']) : new Date(a.FECHA);
                 const fechaB = b['HORA FINALIZADO'] ? new Date(b['HORA FINALIZADO']) : new Date(b.FECHA);
@@ -908,13 +923,11 @@
         }
 
         function verificarAlertaSinAceptar(pedido) {
-            // MODIFICACIÓN: Solo verificar si el estatus es PENDIENTE
             const estatus = (pedido.ESTATUS || '').toUpperCase().trim();
             if (estatus !== 'PENDIENTE') {
                 return false;
             }
 
-            // Si no hay HORA ASIGNADO, usar la FECHA del pedido
             let horaInicio;
             if (pedido['HORA ASIGNADO']) {
                 horaInicio = new Date(pedido['HORA ASIGNADO']);
@@ -1043,8 +1056,9 @@
             document.getElementById('modalTitle').textContent = `Pedido #${noPedido}`;
 
             modalBody.innerHTML = `
+                <!-- SECCIÓN 1: DATOS GENERALES -->
                 <div class="detail-section">
-                    <div class="section-title">📋 Información General</div>
+                    <div class="section-title">📋 Datos Generales</div>
                     <div class="detail-grid">
                         <div class="detail-item">
                             <div class="detail-label">Estado</div>
@@ -1059,46 +1073,72 @@
                             <div class="detail-value">${pedido.VEHICULO || 'N/A'}</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Delivery</div>
+                            <div class="detail-label">Delivery Asignado</div>
                             <div class="detail-value">${pedido.DELIVERY || 'Sin asignar'}</div>
                         </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Cliente</div>
+                            <div class="detail-value">${pedido.NOMBRE || pedido.CLIENTE || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tiempo Total</div>
+                            <div class="detail-value highlight">${tiempoInfo.texto}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Fecha Ingreso</div>
+                            <div class="detail-value">${pedido.FECHA ? new Date(pedido.FECHA).toLocaleString('es-HN') : 'N/A'}</div>
+                        </div>
+                        ${pedido.OBSERVACIONES ? `
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <div class="detail-label">Observaciones</div>
+                            <div class="detail-value">${pedido.OBSERVACIONES}</div>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
 
+                <!-- SECCIÓN 2: DATOS DE RECOLECTA -->
                 <div class="detail-section">
-                    <div class="section-title">🏪 Comercio</div>
+                    <div class="section-title">📦 Datos de Recolecta</div>
                     <div class="detail-grid">
                         <div class="detail-item">
-                            <div class="detail-label">Nombre</div>
+                            <div class="detail-label">Comercio</div>
                             <div class="detail-value">${pedido['NOMBRE DE COMERCIO'] || 'N/A'}</div>
                         </div>
                         <div class="detail-item">
+                            <div class="detail-label">Lugar de Recolecta</div>
+                            <div class="detail-value">${pedido['LUGAR DE RECOLECTA'] || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <div class="detail-label">Ubicación de Recolecta</div>
+                            <div class="detail-value">${pedido['UBICACION DE RECOLECTA'] || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item" style="grid-column: 1 / -1;">
                             <div class="detail-label">Pedido Principal</div>
                             <div class="detail-value">${pedido['PEDIDO PRINCIPAL'] || 'N/A'}</div>
                         </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Celular de quien Entrega</div>
+                            <div class="detail-value">${pedido['CELULAR DE QUIEN ENTREGA'] || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Pagar en Establecimiento</div>
+                            <div class="detail-value">${pedido['TIENE QUE PAGAR EN ESTABLECIMIENTO'] || 'NO'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Ya está Encargado</div>
+                            <div class="detail-value">${pedido['YA ESTA ENCARGADO'] || 'NO'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Hora en Establecimiento</div>
+                            <div class="detail-value">${pedido['HORA EN ESTABLECIMIENTO'] || 'N/A'}</div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- SECCIÓN 3: DATOS DE PAGO -->
                 <div class="detail-section">
-                    <div class="section-title">📍 Ubicación</div>
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <div class="detail-label">Ciudad</div>
-                            <div class="detail-value">${pedido.CIUDAD || 'N/A'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Sector</div>
-                            <div class="detail-value">${pedido.SECTOR || 'N/A'}</div>
-                        </div>
-                        <div class="detail-item" style="grid-column: 1 / -1;">
-                            <div class="detail-label">Dirección de Entrega</div>
-                            <div class="detail-value">${pedido['DIRECCION'] || pedido['UBICACION DE ENTREGA'] || 'N/A'}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-section">
-                    <div class="section-title">💰 Montos</div>
+                    <div class="section-title">💰 Datos de Pago</div>
                     <div class="detail-grid">
                         <div class="detail-item">
                             <div class="detail-label">Total Productos</div>
@@ -1114,29 +1154,60 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Total + Envío</div>
-                            <div class="detail-value" style="color: #667eea; font-size: 16px;">L ${parseFloat(pedido['VT ENVIO'] || 0).toFixed(2)}</div>
+                            <div class="detail-value highlight">L ${parseFloat(pedido['VT ENVIO'] || 0).toFixed(2)}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Tipo de Pago</div>
                             <div class="detail-value">${pedido['TIPO DE PAGO'] || 'N/A'}</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Pagar en Establecimiento</div>
-                            <div class="detail-value">${pedido['TIENE QUE PAGAR EN ESTABLECIMIENTO'] || 'NO'}</div>
+                            <div class="detail-label">Cupón de Descuento</div>
+                            <div class="detail-value">${pedido['CUPON DE DESCUENTO'] || 'N/A'}</div>
                         </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Distancia (KM)</div>
+                            <div class="detail-value">${pedido['KM DISTANCIA'] || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Costo Sugerido</div>
+                            <div class="detail-value">L ${parseFloat(pedido['COSTO SUGERIDO'] || 0).toFixed(2)}</div>
+                        </div>
+                        ${pedido['LINK DE PAGO'] ? `
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <div class="detail-label">Link de Pago</div>
+                            <div class="detail-value"><a href="${pedido['LINK DE PAGO']}" target="_blank" style="color: #667eea; text-decoration: underline;">Ver Link</a></div>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
 
+                <!-- SECCIÓN 4: DATOS DE ENTREGA -->
                 <div class="detail-section">
-                    <div class="section-title">⏰ Tiempos</div>
+                    <div class="section-title">🚚 Datos de Entrega</div>
                     <div class="detail-grid">
                         <div class="detail-item">
-                            <div class="detail-label">Tiempo Total</div>
-                            <div class="detail-value" style="color: #667eea; font-size: 16px; font-weight: bold;">${tiempoInfo.texto}</div>
+                            <div class="detail-label">Ciudad</div>
+                            <div class="detail-value">${pedido.CIUDAD || 'N/A'}</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Fecha Ingreso</div>
-                            <div class="detail-value">${pedido.FECHA ? new Date(pedido.FECHA).toLocaleString('es-HN') : 'N/A'}</div>
+                            <div class="detail-label">Sector</div>
+                            <div class="detail-value">${pedido.SECTOR || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <div class="detail-label">Dirección de Entrega</div>
+                            <div class="detail-value">${pedido['DIRECCION'] || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <div class="detail-label">Ubicación de Entrega</div>
+                            <div class="detail-value">${pedido['UBICACION DE ENTREGA'] || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Celular quien Recibe</div>
+                            <div class="detail-value">${pedido['CELULAR QUIEN RECIBE'] || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Ubicaciones Frecuentes</div>
+                            <div class="detail-value">${pedido['UBICACIONES FRECUENTES'] || 'N/A'}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Hora Asignado</div>
@@ -1145,10 +1216,6 @@
                         <div class="detail-item">
                             <div class="detail-label">Hora Aceptado</div>
                             <div class="detail-value">${pedido['HORA ACEPTADO'] || 'N/A'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Hora en Establecimiento</div>
-                            <div class="detail-value">${pedido['HORA EN ESTABLECIMIENTO'] || 'N/A'}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Hora en Camino</div>
@@ -1160,15 +1227,6 @@
                         </div>
                     </div>
                 </div>
-
-                ${pedido.OBSERVACIONES ? `
-                <div class="detail-section">
-                    <div class="section-title">📝 Observaciones</div>
-                    <div class="detail-item" style="width: 100%;">
-                        <div class="detail-value">${pedido.OBSERVACIONES}</div>
-                    </div>
-                </div>
-                ` : ''}
             `;
 
             modal.classList.add('active');
