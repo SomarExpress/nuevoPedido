@@ -1012,16 +1012,22 @@
             // Mostrar lista de deliveries
             modalBody.innerHTML = `
                 <div class="deliveries-list">
-                    ${deliveries.map(delivery => `
-                        <div class="delivery-item" onclick="asignarDelivery('${delivery.NOMBRE || delivery.nombre}')">
-                            <div class="delivery-nombre">${delivery.NOMBRE || delivery.nombre || 'Sin nombre'}</div>
-                            <div class="delivery-info">
-                                <span class="delivery-badge">📞 ${delivery.CELULAR || delivery.celular || 'Sin teléfono'}</span>
-                                ${delivery.VEHICULO || delivery.vehiculo ? `<span class="delivery-badge">🚗 ${delivery.VEHICULO || delivery.vehiculo}</span>` : ''}
-                                ${delivery.CIUDAD || delivery.ciudad ? `<span class="delivery-badge">📍 ${delivery.CIUDAD || delivery.ciudad}</span>` : ''}
+                    ${deliveries.map(delivery => {
+                        const idDelivery = delivery.ID || delivery.id || delivery['ID DELIVERY'] || '';
+                        const nombreDelivery = delivery.NOMBRE || delivery.nombre || 'Sin nombre';
+                        const deliveryCompleto = idDelivery ? `${idDelivery} - ${nombreDelivery}` : nombreDelivery;
+                        
+                        return `
+                            <div class="delivery-item" onclick='asignarDelivery(${JSON.stringify(deliveryCompleto).replace(/'/g, "&#39;")})'>
+                                <div class="delivery-nombre">${nombreDelivery} ${idDelivery ? `<span style="color: #667eea;">#${idDelivery}</span>` : ''}</div>
+                                <div class="delivery-info">
+                                    <span class="delivery-badge">📞 ${delivery.CELULAR || delivery.celular || 'Sin teléfono'}</span>
+                                    ${delivery.VEHICULO || delivery.vehiculo ? `<span class="delivery-badge">🚗 ${delivery.VEHICULO || delivery.vehiculo}</span>` : ''}
+                                    ${delivery.CIUDAD || delivery.ciudad ? `<span class="delivery-badge">📍 ${delivery.CIUDAD || delivery.ciudad}</span>` : ''}
+                                </div>
                             </div>
-                        </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             `;
         }
@@ -1033,7 +1039,7 @@
             }
         }
 
-        async function asignarDelivery(nombreDelivery) {
+        async function asignarDelivery(deliveryCompleto) {
             if (!pedidoActualParaAsignar) {
                 alert('Error: No hay pedido seleccionado');
                 return;
@@ -1041,22 +1047,23 @@
 
             const noPedido = pedidoActualParaAsignar['NO ORDEN'] || pedidoActualParaAsignar.ID;
             
+            // Extraer solo el nombre para el mensaje de confirmación
+            const nombreDelivery = deliveryCompleto.includes(' - ') 
+                ? deliveryCompleto.split(' - ')[1] 
+                : deliveryCompleto;
+            
             if (!confirm(`¿Asignar delivery "${nombreDelivery}" al pedido #${noPedido}?`)) {
                 return;
             }
 
             try {
-                // Aquí harías la actualización en Google Sheets
-                // Por ahora simularemos con una actualización local
-                
                 const updateData = {
                     noPedido: noPedido,
-                    delivery: nombreDelivery,
+                    delivery: deliveryCompleto, // Guardamos en formato "ID - NOMBRE"
                     estatus: 'ASIGNADO',
                     horaAsignado: new Date().toISOString()
                 };
 
-                // NOTA: Necesitarás crear una función en Apps Script para actualizar el pedido
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({
