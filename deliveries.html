@@ -287,7 +287,7 @@
             width: 100%;
             display: none;
             position: relative;
-            flex-direction: column;
+            flex-direction: row;
         }
 
         .map-view.active {
@@ -303,30 +303,45 @@
         .map-sidebar {
             width: 350px;
             background: white;
-            overflow-y: auto;
-            overflow-x: hidden;
             box-shadow: -2px 0 8px rgba(0,0,0,0.1);
-            position: absolute;
-            right: 0;
-            top: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
             height: 100%;
             z-index: 1000;
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling en iOS */
         }
 
         .sidebar-header {
             padding: 20px;
             background: #10b981;
             color: white;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            flex-shrink: 0;
         }
 
         .sidebar-list {
-            padding: 10px;
+            flex: 1;
             overflow-y: auto;
-            max-height: calc(100% - 70px); /* Altura menos el header */
+            overflow-x: hidden;
+            padding: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .sidebar-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-list::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 3px;
+        }
+
+        .sidebar-list::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 3px;
+        }
+
+        .sidebar-list::-webkit-scrollbar-thumb:hover {
+            background: #059669;
         }
 
         .sidebar-title {
@@ -490,14 +505,12 @@
                 bottom: 0;
                 left: 0;
                 right: 0;
-                top: auto;
                 width: 100%;
-                height: 50vh;
-                max-height: 50vh;
+                height: 60vh;
+                max-height: 60vh;
                 transform: translateY(100%);
                 transition: transform 0.3s ease-in-out;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
+                z-index: 1001;
             }
 
             .map-sidebar.mobile-open {
@@ -505,7 +518,7 @@
             }
 
             .sidebar-list {
-                max-height: calc(50vh - 70px);
+                flex: 1;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
             }
@@ -513,8 +526,8 @@
             .sidebar-toggle {
                 display: block;
                 position: fixed;
-                bottom: 10px;
-                right: 10px;
+                bottom: 20px;
+                right: 20px;
                 background: #10b981;
                 color: white;
                 border: none;
@@ -524,11 +537,11 @@
                 font-size: 24px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 cursor: pointer;
-                z-index: 1001;
+                z-index: 1000;
             }
 
             #map {
-                height: calc(100vh - 220px);
+                height: 100%;
             }
 
             .deliveries-grid {
@@ -576,7 +589,7 @@
     </div>
 
     <div class="controls">
-        <a href="PEDIDOS.html" class="btn-back">← Volver a Pedidos</a>
+        <a href="index.html" class="btn-back">← Volver a Pedidos</a>
         
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="Buscar por nombre, ciudad, sector...">
@@ -777,15 +790,15 @@
                 
                 let direccion = 'Dirección no disponible';
                 let ciudad = 'Ciudad no disponible';
+                let sector = 'Sector no disponible';
                 
                 if (data.address) {
                     // Construir dirección
                     const partes = [];
                     if (data.address.road) partes.push(data.address.road);
-                    if (data.address.neighbourhood) partes.push(data.address.neighbourhood);
-                    if (data.address.suburb) partes.push(data.address.suburb);
+                    if (data.address.house_number) partes.push('#' + data.address.house_number);
                     
-                    direccion = partes.length > 0 ? partes.join(', ') : data.display_name;
+                    direccion = partes.length > 0 ? partes.join(' ') : data.display_name;
                     
                     // Obtener ciudad
                     ciudad = data.address.city || 
@@ -793,9 +806,20 @@
                              data.address.village || 
                              data.address.municipality || 
                              'Ciudad no disponible';
+                    
+                    // Obtener sector (barrio, colonia, residencial)
+                    // Nominatim usa diferentes nombres según la región
+                    sector = data.address.neighbourhood ||      // Barrio
+                             data.address.suburb ||             // Colonia/Suburbio
+                             data.address.residential ||        // Residencial
+                             data.address.quarter ||            // Sector/Cuadrante
+                             data.address.borough ||            // Distrito
+                             data.address.hamlet ||             // Aldea
+                             data.address.city_district ||      // Distrito de ciudad
+                             'Sector no disponible';
                 }
                 
-                const resultado = { direccion, ciudad };
+                const resultado = { direccion, ciudad, sector };
                 addressCache[cacheKey] = resultado;
                 
                 return resultado;
@@ -803,7 +827,8 @@
                 console.error('Error al obtener dirección:', error);
                 return { 
                     direccion: 'Error al obtener dirección', 
-                    ciudad: 'Ciudad no disponible' 
+                    ciudad: 'Ciudad no disponible',
+                    sector: 'Sector no disponible'
                 };
             }
         }
@@ -844,6 +869,7 @@
                     const direccionData = await obtenerDireccion(coords.lat, coords.lng);
                     delivery._direccionActual = direccionData.direccion;
                     delivery._ciudadActual = direccionData.ciudad;
+                    delivery._sectorActual = direccionData.sector;
                     
                     // Calcular distancia a la base usando OSRM (distancia real por carretera)
                     const distancia = await calcularDistanciaCarretera(
@@ -910,6 +936,7 @@
             grid.innerHTML = todosLosDeliveries.map(delivery => {
                 const direccion = delivery._direccionActual || 'Cargando dirección...';
                 const ciudad = delivery._ciudadActual || delivery.CIUDAD || 'Ciudad no disponible';
+                const sector = delivery._sectorActual || delivery['COLONIA/SECTOR'] || '';
                 const distancia = delivery._distanciaBase;
                 
                 // Icono según el tipo de distancia
@@ -931,6 +958,12 @@
                             <span class="info-icon">🏙️</span>
                             <span>${ciudad}</span>
                         </div>
+                        ${sector && sector !== 'Sector no disponible' ? `
+                        <div class="info-row">
+                            <span class="info-icon">🏘️</span>
+                            <span>${sector}</span>
+                        </div>
+                        ` : ''}
                         <div class="info-row">
                             <span class="info-icon">📍</span>
                             <span class="${direccion.includes('Cargando') ? 'loading-address' : ''}">${direccion}</span>
@@ -1061,6 +1094,7 @@
 
                     const direccion = delivery._direccionActual || 'Dirección no disponible';
                     const ciudad = delivery._ciudadActual || delivery.CIUDAD || 'Sin ciudad';
+                    const sector = delivery._sectorActual || delivery['COLONIA/SECTOR'] || '';
                     const distancia = delivery._distanciaBase;
 
                     // Crear marker
@@ -1070,6 +1104,7 @@
                             <div class="popup-content">
                                 <div class="popup-name">${delivery.NOMBRE || 'Sin nombre'}</div>
                                 <div class="popup-info">🏙️ ${ciudad}</div>
+                                ${sector && sector !== 'Sector no disponible' ? `<div class="popup-info">🏘️ ${sector}</div>` : ''}
                                 <div class="popup-info">📍 ${direccion}</div>
                                 <div class="popup-info">📧 ${delivery.CORREO || 'Sin correo'}</div>
                                 ${distancia ? `<div class="popup-info" style="color: #10b981; font-weight: bold;">🏠 ${distancia.km} km • ${distancia.minutos} min a base</div>` : ''}
@@ -1087,9 +1122,15 @@
                     const sidebarItem = document.createElement('div');
                     sidebarItem.className = 'sidebar-delivery';
                     sidebarItem.setAttribute('data-delivery-id', delivery.ID_DELIVERY);
+                    
+                    const ubicacionTexto = sector && sector !== 'Sector no disponible' 
+                        ? `${ciudad} - ${sector}` 
+                        : ciudad;
+                    
                     sidebarItem.innerHTML = `
                         <div class="sidebar-delivery-name">🚚 ${delivery.NOMBRE || 'Sin nombre'}</div>
-                        <div class="sidebar-delivery-location">${ciudad} - ${direccion}</div>
+                        <div class="sidebar-delivery-location">${ubicacionTexto}</div>
+                        <div class="sidebar-delivery-location" style="font-size: 11px; margin-top: 2px;">📍 ${direccion}</div>
                         ${distancia ? `<div class="sidebar-delivery-distance">🏠 ${distancia.km} km • ${distancia.minutos} min a base</div>` : ''}
                     `;
                     sidebarItem.onclick = () => {
