@@ -584,6 +584,132 @@
             }
         }
 
+        .btn-asignar {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .btn-asignar:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-asignar:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal-asignar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-asignar.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-asignar-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .deliveries-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .deliveries-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .deliveries-list::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 3px;
+        }
+
+        .deliveries-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .delivery-item {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .delivery-item:hover {
+            border-color: #10b981;
+            background: #f0fdf4;
+            transform: translateY(-2px);
+        }
+
+        .delivery-nombre {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .delivery-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .delivery-badge {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .loading-deliveries {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .empty-deliveries {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
         @media (max-width: 768px) {
             .canvas-container {
                 grid-template-columns: 1fr;
@@ -693,10 +819,28 @@
 
     <div id="notification" class="notification-dot"></div>
 
+    <!-- Modal para Asignar Delivery -->
+    <div id="modalAsignar" class="modal-asignar" onclick="cerrarModalAsignar(event)">
+        <div class="modal-asignar-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">🚚 Asignar Delivery</div>
+                <button class="modal-close" onclick="cerrarModalAsignar()">×</button>
+            </div>
+            <div class="modal-body" id="modalAsignarBody">
+                <div class="loading-deliveries">
+                    <div class="spinner"></div>
+                    <p>Cargando deliveries...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQcJdpvmKoOnqQKEWl8vWHsnCNJhfc3bQO2MjRIGutOtTjouRnIZNLqKb9ODrdYdWsiQ/exec';
         
         let todosLosPedidos = [];
+        let todosLosDeliveries = [];
+        let pedidoActualParaAsignar = null;
         let filtroActual = 'todos';
         let cargaInicial = true;
         let pedidosAnteriores = [];
@@ -816,6 +960,125 @@
                     alert('Error de conexión: ' + error.message);
                     document.getElementById('loadingState').style.display = 'none';
                 }
+            }
+        }
+
+        async function cargarDeliveries() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getDeliveries&timestamp=${Date.now()}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    todosLosDeliveries = data.deliveries;
+                    return todosLosDeliveries;
+                } else {
+                    console.error('Error al cargar deliveries:', data.error);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                return [];
+            }
+        }
+
+        async function abrirModalAsignar(pedido) {
+            pedidoActualParaAsignar = pedido;
+            const modal = document.getElementById('modalAsignar');
+            const modalBody = document.getElementById('modalAsignarBody');
+
+            modal.classList.add('active');
+            
+            // Mostrar loading
+            modalBody.innerHTML = `
+                <div class="loading-deliveries">
+                    <div class="spinner"></div>
+                    <p>Cargando deliveries...</p>
+                </div>
+            `;
+
+            // Cargar deliveries
+            const deliveries = await cargarDeliveries();
+
+            if (deliveries.length === 0) {
+                modalBody.innerHTML = `
+                    <div class="empty-deliveries">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🚫</div>
+                        <p>No hay deliveries disponibles</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Mostrar lista de deliveries
+            modalBody.innerHTML = `
+                <div class="deliveries-list">
+                    ${deliveries.map(delivery => `
+                        <div class="delivery-item" onclick="asignarDelivery('${delivery.NOMBRE || delivery.nombre}')">
+                            <div class="delivery-nombre">${delivery.NOMBRE || delivery.nombre || 'Sin nombre'}</div>
+                            <div class="delivery-info">
+                                <span class="delivery-badge">📞 ${delivery.CELULAR || delivery.celular || 'Sin teléfono'}</span>
+                                ${delivery.VEHICULO || delivery.vehiculo ? `<span class="delivery-badge">🚗 ${delivery.VEHICULO || delivery.vehiculo}</span>` : ''}
+                                ${delivery.CIUDAD || delivery.ciudad ? `<span class="delivery-badge">📍 ${delivery.CIUDAD || delivery.ciudad}</span>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function cerrarModalAsignar(event) {
+            if (!event || event.target.id === 'modalAsignar') {
+                document.getElementById('modalAsignar').classList.remove('active');
+                pedidoActualParaAsignar = null;
+            }
+        }
+
+        async function asignarDelivery(nombreDelivery) {
+            if (!pedidoActualParaAsignar) {
+                alert('Error: No hay pedido seleccionado');
+                return;
+            }
+
+            const noPedido = pedidoActualParaAsignar['NO ORDEN'] || pedidoActualParaAsignar.ID;
+            
+            if (!confirm(`¿Asignar delivery "${nombreDelivery}" al pedido #${noPedido}?`)) {
+                return;
+            }
+
+            try {
+                // Aquí harías la actualización en Google Sheets
+                // Por ahora simularemos con una actualización local
+                
+                const updateData = {
+                    noPedido: noPedido,
+                    delivery: nombreDelivery,
+                    estatus: 'ASIGNADO',
+                    horaAsignado: new Date().toISOString()
+                };
+
+                // NOTA: Necesitarás crear una función en Apps Script para actualizar el pedido
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'asignarDelivery',
+                        data: updateData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion(`✅ Delivery "${nombreDelivery}" asignado al pedido #${noPedido}`, 'status');
+                    cerrarModalAsignar();
+                    cerrarModal();
+                    await cargarPedidos(); // Recargar pedidos
+                } else {
+                    alert('Error al asignar delivery: ' + (result.error || 'Error desconocido'));
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión: ' + error.message);
             }
         }
 
@@ -1052,6 +1315,8 @@
             const modalBody = document.getElementById('modalBody');
             const noPedido = pedido['NO ORDEN'] || pedido.ID || 'S/N';
             const tiempoInfo = calcularTiempoTranscurrido(pedido);
+            const tieneDelivery = pedido.DELIVERY && pedido.DELIVERY.trim() !== '' && pedido.DELIVERY !== 'Sin asignar';
+            const estatus = (pedido.ESTATUS || '').toUpperCase().trim();
 
             document.getElementById('modalTitle').textContent = `Pedido #${noPedido}`;
 
@@ -1095,6 +1360,12 @@
                         </div>
                         ` : ''}
                     </div>
+                    
+                    ${!tieneDelivery && estatus !== 'FINALIZADO' && estatus !== 'CANCELADO' ? `
+                    <button class="btn-asignar" onclick='abrirModalAsignarDesdeDetalle(${JSON.stringify(pedido).replace(/'/g, "&#39;")})'>
+                        🚚 Asignar Delivery
+                    </button>
+                    ` : ''}
                 </div>
 
                 <!-- SECCIÓN 2: DATOS DE RECOLECTA -->
@@ -1230,6 +1501,10 @@
             `;
 
             modal.classList.add('active');
+        }
+
+        function abrirModalAsignarDesdeDetalle(pedido) {
+            abrirModalAsignar(pedido);
         }
 
         function cerrarModal(event) {
