@@ -836,7 +836,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQcJdpvmKoOnqQKEWl8vWHsnCNJhfc3bQO2MjRIGutOtTjouRnIZNLqKb9ODrdYdWsiQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIhn_p8CRrSeUPDVmbvz4IkZEnY1trlLV0dAGOumXz-DHHbw9NXMMo0FsGRxwAFJ4Law/exec';
         
         let todosLosPedidos = [];
         let todosLosDeliveries = [];
@@ -845,6 +845,21 @@
         let cargaInicial = true;
         let pedidosAnteriores = [];
         let estatusAnteriores = {};
+
+        // Función para verificar conectividad con el script
+        async function verificarConexion() {
+            try {
+                console.log('Verificando conexión con Apps Script...');
+                const response = await fetch(`${SCRIPT_URL}?action=getPedidos&timestamp=${Date.now()}`);
+                console.log('Estado de respuesta:', response.status);
+                const data = await response.json();
+                console.log('Conexión exitosa:', data.success);
+                return data.success;
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                return false;
+            }
+        }
 
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -1088,15 +1103,16 @@
             try {
                 const updateData = {
                     noPedido: noPedido,
-                    delivery: deliveryCompleto, // Guardamos en formato "ID - NOMBRE"
+                    delivery: deliveryCompleto,
                     estatus: 'ASIGNADO',
                     horaAsignado: new Date().toISOString()
                 };
 
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
+                    mode: 'cors',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'text/plain;charset=utf-8'
                     },
                     body: JSON.stringify({
                         action: 'asignarDelivery',
@@ -1110,28 +1126,48 @@
 
                 const result = await response.json();
 
+                // CERRAR TODOS LOS MODALES INMEDIATAMENTE
+                document.getElementById('modalAsignar').classList.remove('active');
+                document.getElementById('modal').classList.remove('active');
+                pedidoActualParaAsignar = null;
+
                 if (result.success) {
-                    // Cerrar ambos modales INMEDIATAMENTE
-                    document.getElementById('modalAsignar').classList.remove('active');
-                    document.getElementById('modal').classList.remove('active');
-                    pedidoActualParaAsignar = null;
-                    
-                    // Mostrar notificación
+                    // Mostrar notificación de éxito
                     mostrarNotificacion(`✅ Delivery "${nombreDelivery}" asignado al pedido #${noPedido}`, 'status');
                     
-                    // Recargar pedidos sin esperar (no bloqueante)
-                    cargarPedidos().catch(err => console.error('Error al recargar:', err));
+                    // Recargar pedidos sin esperar
+                    setTimeout(() => {
+                        cargarPedidos().catch(err => console.error('Error al recargar:', err));
+                    }, 500);
                 } else {
-                    // Si falla, restaurar el modal
-                    await abrirModalAsignar(pedidoActualParaAsignar);
+                    // Mostrar error pero mantener modales cerrados
                     alert('Error al asignar delivery: ' + (result.error || 'Error desconocido'));
+                    // Recargar de todas formas para refrescar el estado
+                    setTimeout(() => {
+                        cargarPedidos().catch(err => console.error('Error al recargar:', err));
+                    }, 500);
                 }
 
             } catch (error) {
-                console.error('Error:', error);
-                // Si falla, restaurar el modal
-                await abrirModalAsignar(pedidoActualParaAsignar);
-                alert('Error de conexión: ' + error.message);
+                console.error('Error completo:', error);
+                
+                // CERRAR TODOS LOS MODALES INCLUSO SI HAY ERROR
+                document.getElementById('modalAsignar').classList.remove('active');
+                document.getElementById('modal').classList.remove('active');
+                pedidoActualParaAsignar = null;
+                
+                // Mostrar error más descriptivo
+                alert('Error de conexión al asignar delivery.\n\n' + 
+                      'Detalles: ' + error.message + '\n\n' +
+                      'Por favor verifica:\n' +
+                      '1. Que el script de Apps Script esté desplegado correctamente\n' +
+                      '2. Que la URL del script sea la correcta\n' +
+                      '3. Que tengas permisos para editar la hoja');
+                
+                // Recargar para verificar si se guardó a pesar del error
+                setTimeout(() => {
+                    cargarPedidos().catch(err => console.error('Error al recargar:', err));
+                }, 500);
             }
         }
 
