@@ -758,7 +758,7 @@
             <input type="text" id="searchInput" placeholder="Buscar por pedido, comercio, delivery...">
             <span class="search-icon">🔍</span>
         </div>
-        <button class="btn-refresh" onclick="cargarPedidos()">🔄 Actualizar</button>
+        <button class="btn-refresh" onclick="cargarPedidos(true)" id="btnRefresh">🔄 Actualizar</button>
         <a href="deliveries.html" class="btn-deliveries">🚚 Ver Deliveries</a>
         
         <div class="filter-chips">
@@ -925,8 +925,15 @@
             pedidosAnteriores = [...pedidosNuevos];
         }
 
-        async function cargarPedidos() {
+        async function cargarPedidos(mostrarLoading = false) {
             try {
+                // Mostrar indicador de carga en el botón si es una recarga manual
+                const btnRefresh = document.getElementById('btnRefresh');
+                if (mostrarLoading && btnRefresh) {
+                    btnRefresh.disabled = true;
+                    btnRefresh.innerHTML = '⏳ Actualizando...';
+                }
+
                 if (cargaInicial) {
                     document.getElementById('loadingState').style.display = 'block';
                     document.getElementById('canvasContainer').style.display = 'none';
@@ -954,11 +961,24 @@
                     document.getElementById('canvasContainer').style.display = 'grid';
                     cargaInicial = false;
                 }
+                
+                // Restaurar botón
+                if (mostrarLoading && btnRefresh) {
+                    btnRefresh.disabled = false;
+                    btnRefresh.innerHTML = '🔄 Actualizar';
+                }
             } catch (error) {
                 console.error('Error:', error);
                 if (cargaInicial) {
                     alert('Error de conexión: ' + error.message);
                     document.getElementById('loadingState').style.display = 'none';
+                }
+                
+                // Restaurar botón en caso de error
+                const btnRefresh = document.getElementById('btnRefresh');
+                if (mostrarLoading && btnRefresh) {
+                    btnRefresh.disabled = false;
+                    btnRefresh.innerHTML = '🔄 Actualizar';
                 }
             }
         }
@@ -1013,7 +1033,7 @@
             modalBody.innerHTML = `
                 <div class="deliveries-list">
                     ${deliveries.map(delivery => {
-                        const idDelivery = delivery.ID_DELIVERY || delivery.id || delivery['ID DELIVERY'] || '';
+                        const idDelivery = delivery.ID || delivery.id || delivery['ID DELIVERY'] || '';
                         const nombreDelivery = delivery.NOMBRE || delivery.nombre || 'Sin nombre';
                         const deliveryCompleto = idDelivery ? `${idDelivery} - ${nombreDelivery}` : nombreDelivery;
                         
@@ -1056,6 +1076,15 @@
                 return;
             }
 
+            // Mostrar loading en el modal de asignación
+            const modalBody = document.getElementById('modalAsignarBody');
+            modalBody.innerHTML = `
+                <div class="loading-deliveries">
+                    <div class="spinner"></div>
+                    <p>Asignando delivery...</p>
+                </div>
+            `;
+
             try {
                 const updateData = {
                     noPedido: noPedido,
@@ -1066,25 +1095,42 @@
 
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         action: 'asignarDelivery',
                         data: updateData
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
+                    // Cerrar ambos modales INMEDIATAMENTE
+                    document.getElementById('modalAsignar').classList.remove('active');
+                    document.getElementById('modal').classList.remove('active');
+                    pedidoActualParaAsignar = null;
+                    
+                    // Mostrar notificación
                     mostrarNotificacion(`✅ Delivery "${nombreDelivery}" asignado al pedido #${noPedido}`, 'status');
-                    cerrarModalAsignar();
-                    cerrarModal();
-                    await cargarPedidos(); // Recargar pedidos
+                    
+                    // Recargar pedidos sin esperar (no bloqueante)
+                    cargarPedidos().catch(err => console.error('Error al recargar:', err));
                 } else {
+                    // Si falla, restaurar el modal
+                    await abrirModalAsignar(pedidoActualParaAsignar);
                     alert('Error al asignar delivery: ' + (result.error || 'Error desconocido'));
                 }
 
             } catch (error) {
                 console.error('Error:', error);
+                // Si falla, restaurar el modal
+                await abrirModalAsignar(pedidoActualParaAsignar);
                 alert('Error de conexión: ' + error.message);
             }
         }
