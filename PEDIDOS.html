@@ -1013,7 +1013,7 @@
             modalBody.innerHTML = `
                 <div class="deliveries-list">
                     ${deliveries.map(delivery => {
-                        const idDelivery = delivery.ID || delivery.id || delivery['ID DELIVERY'] || '';
+                        const idDelivery = delivery.ID_DELIVERY || delivery.id || delivery['ID DELIVERY'] || '';
                         const nombreDelivery = delivery.NOMBRE || delivery.nombre || 'Sin nombre';
                         const deliveryCompleto = idDelivery ? `${idDelivery} - ${nombreDelivery}` : nombreDelivery;
                         
